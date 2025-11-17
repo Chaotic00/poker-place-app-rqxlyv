@@ -17,6 +17,7 @@ export default function EditTournamentScreen() {
   const [location, setLocation] = useState('');
   const [buyIn, setBuyIn] = useState('');
   const [blindStructure, setBlindStructure] = useState('');
+  const [levelTimes, setLevelTimes] = useState('');
   const [maxPlayers, setMaxPlayers] = useState('');
   const [error, setError] = useState('');
 
@@ -34,6 +35,7 @@ export default function EditTournamentScreen() {
       setLocation(found.location);
       setBuyIn(found.buy_in);
       setBlindStructure(found.blind_structure);
+      setLevelTimes(found.level_times || '');
       setMaxPlayers(found.max_players.toString());
     }
   };
@@ -61,6 +63,7 @@ export default function EditTournamentScreen() {
       location,
       buy_in: buyIn,
       blind_structure: blindStructure,
+      level_times: levelTimes,
       max_players: maxPlayersNum,
     };
 
@@ -173,6 +176,22 @@ export default function EditTournamentScreen() {
               onChangeText={setBlindStructure}
               multiline
               numberOfLines={4}
+            />
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={commonStyles.inputLabel}>Level Times</Text>
+            <Text style={styles.helperText}>
+              Enter time for each level in minutes, separated by commas (e.g., 30, 30, 45)
+            </Text>
+            <TextInput
+              style={[commonStyles.input, styles.textArea]}
+              placeholder="e.g., 30, 30, 45, 45, 60"
+              placeholderTextColor={colors.textSecondary}
+              value={levelTimes}
+              onChangeText={setLevelTimes}
+              multiline
+              numberOfLines={3}
             />
           </View>
 

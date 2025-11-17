@@ -189,6 +189,9 @@ export default function TournamentDetailsScreen() {
 
   const renderBlindStructure = () => {
     const blindLevels = tournament.blind_structure.split(',').map(level => level.trim());
+    const levelTimesArray = tournament.level_times 
+      ? tournament.level_times.split(',').map(time => time.trim()) 
+      : [];
     
     return (
       <View style={styles.blindsContainer}>
@@ -203,14 +206,26 @@ export default function TournamentDetailsScreen() {
           const sb = parts[0] || '-';
           const bb = parts[1] || '-';
           const ante = parts[2] || '-';
+          const levelTime = levelTimesArray[index] || '';
           
           return (
             <React.Fragment key={index}>
               <View style={[styles.blindsRow, index % 2 === 0 && styles.blindsRowAlt]}>
-                <Text style={[styles.blindsCell, { flex: 1 }]}>Lv.{index + 1}</Text>
-                <Text style={[styles.blindsCell, { flex: 1 }]}>{sb}</Text>
-                <Text style={[styles.blindsCell, { flex: 1 }]}>{bb}</Text>
-                <Text style={[styles.blindsCell, { flex: 1 }]}>{ante}</Text>
+                <View style={[styles.blindsCellContainer, { flex: 1 }]}>
+                  <Text style={styles.blindsCell}>Lv.{index + 1}</Text>
+                  {levelTime && (
+                    <Text style={styles.blindsTimeText}>{levelTime} min</Text>
+                  )}
+                </View>
+                <View style={[styles.blindsCellContainer, { flex: 1 }]}>
+                  <Text style={styles.blindsCell}>{sb}</Text>
+                </View>
+                <View style={[styles.blindsCellContainer, { flex: 1 }]}>
+                  <Text style={styles.blindsCell}>{bb}</Text>
+                </View>
+                <View style={[styles.blindsCellContainer, { flex: 1 }]}>
+                  <Text style={styles.blindsCell}>{ante}</Text>
+                </View>
               </View>
             </React.Fragment>
           );
@@ -477,7 +492,7 @@ const styles = StyleSheet.create({
   },
   blindsRow: {
     flexDirection: 'row',
-    paddingVertical: 16,
+    paddingVertical: 12,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
@@ -485,11 +500,22 @@ const styles = StyleSheet.create({
   blindsRowAlt: {
     backgroundColor: colors.cardBackground || '#F5F5F5',
   },
+  blindsCellContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   blindsCell: {
     fontSize: 14,
     color: colors.text,
     textAlign: 'center',
     fontWeight: '500',
+  },
+  blindsTimeText: {
+    fontSize: 11,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginTop: 2,
+    fontStyle: 'italic',
   },
   playersSection: {
     padding: 16,

@@ -19,6 +19,7 @@ export interface Tournament {
   location: string;
   buy_in: string;
   blind_structure: string;
+  level_times?: string;
   max_players: number;
   created_by: string;
   created_at: string;
