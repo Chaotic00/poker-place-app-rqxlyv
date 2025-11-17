@@ -2,7 +2,7 @@
 import "react-native-reanimated";
 import React, { useEffect } from "react";
 import { useFonts } from "expo-font";
-import { Stack, router } from "expo-router";
+import { Stack, router, useSegments, useRootNavigationState } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { SystemBars } from "react-native-edge-to-edge";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -16,13 +16,80 @@ import {
 } from "@react-navigation/native";
 import { StatusBar } from "expo-status-bar";
 import { WidgetProvider } from "@/contexts/WidgetContext";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 
 SplashScreen.preventAutoHideAsync();
 
-export const unstable_settings = {
-  initialRouteName: "welcome",
-};
+function RootLayoutNav() {
+  const { user, loading } = useAuth();
+  const segments = useSegments();
+  const navigationState = useRootNavigationState();
+
+  useEffect(() => {
+    if (!navigationState?.key || loading) return;
+
+    const inAuthGroup = segments[0] === '(tabs)';
+
+    if (!user && inAuthGroup) {
+      // Redirect to welcome if not authenticated and trying to access tabs
+      router.replace('/welcome');
+    } else if (user && !inAuthGroup) {
+      // Redirect to home if authenticated and not in tabs
+      router.replace('/(tabs)/(home)');
+    }
+  }, [user, segments, navigationState, loading]);
+
+  return (
+    <Stack>
+      <Stack.Screen name="welcome" options={{ headerShown: false }} />
+      <Stack.Screen name="login" options={{ headerShown: false }} />
+      <Stack.Screen name="request-access" options={{ headerShown: false }} />
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen
+        name="tournament-details"
+        options={{
+          presentation: "modal",
+          title: "Tournament Details",
+        }}
+      />
+      <Stack.Screen
+        name="admin/user-approvals"
+        options={{
+          presentation: "modal",
+          title: "User Approvals",
+        }}
+      />
+      <Stack.Screen
+        name="admin/tournament-management"
+        options={{
+          presentation: "modal",
+          title: "Tournament Management",
+        }}
+      />
+      <Stack.Screen
+        name="admin/create-tournament"
+        options={{
+          presentation: "modal",
+          title: "Create Tournament",
+        }}
+      />
+      <Stack.Screen
+        name="admin/edit-tournament"
+        options={{
+          presentation: "modal",
+          title: "Edit Tournament",
+        }}
+      />
+      <Stack.Screen
+        name="admin/rsvp-viewer"
+        options={{
+          presentation: "modal",
+          title: "RSVP Viewer",
+        }}
+      />
+    </Stack>
+  );
+}
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -87,54 +154,7 @@ export default function RootLayout() {
         <AuthProvider>
           <WidgetProvider>
             <GestureHandlerRootView>
-              <Stack>
-                <Stack.Screen name="welcome" options={{ headerShown: false }} />
-                <Stack.Screen name="login" options={{ headerShown: false }} />
-                <Stack.Screen name="request-access" options={{ headerShown: false }} />
-                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                <Stack.Screen
-                  name="tournament-details"
-                  options={{
-                    presentation: "modal",
-                    title: "Tournament Details",
-                  }}
-                />
-                <Stack.Screen
-                  name="admin/user-approvals"
-                  options={{
-                    presentation: "modal",
-                    title: "User Approvals",
-                  }}
-                />
-                <Stack.Screen
-                  name="admin/tournament-management"
-                  options={{
-                    presentation: "modal",
-                    title: "Tournament Management",
-                  }}
-                />
-                <Stack.Screen
-                  name="admin/create-tournament"
-                  options={{
-                    presentation: "modal",
-                    title: "Create Tournament",
-                  }}
-                />
-                <Stack.Screen
-                  name="admin/edit-tournament"
-                  options={{
-                    presentation: "modal",
-                    title: "Edit Tournament",
-                  }}
-                />
-                <Stack.Screen
-                  name="admin/rsvp-viewer"
-                  options={{
-                    presentation: "modal",
-                    title: "RSVP Viewer",
-                  }}
-                />
-              </Stack>
+              <RootLayoutNav />
               <SystemBars style={"auto"} />
             </GestureHandlerRootView>
           </WidgetProvider>

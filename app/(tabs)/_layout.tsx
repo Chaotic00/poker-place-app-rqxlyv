@@ -1,6 +1,6 @@
 
-import React, { useEffect } from 'react';
-import { Stack, useRouter } from 'expo-router';
+import React from 'react';
+import { Stack } from 'expo-router';
 import FloatingTabBar, { TabBarItem } from '@/components/FloatingTabBar';
 import { useAuth } from '@/contexts/AuthContext';
 import { View, ActivityIndicator } from 'react-native';
@@ -8,13 +8,6 @@ import { colors } from '@/styles/commonStyles';
 
 export default function TabLayout() {
   const { user, loading } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!loading && !user) {
-      router.replace('/welcome');
-    }
-  }, [user, loading, router]);
 
   if (loading) {
     return (

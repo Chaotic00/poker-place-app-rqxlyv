@@ -2,281 +2,124 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '@/types';
 import { StorageService } from '@/utils/storage';
-import { router } from 'expo-router';
 
 interface AuthContextType {
   user: User | null;
-  loadingPerfect! I can see the current implementation. The logout function in `AuthContext.tsx` clears the user data, and in `profile.tsx` it navigates to `/welcome`. However, based on the user's request, we need to navigate to the login page instead of the welcome page.
+  loading: boolean;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  logout: () => Promise<void>;
+  register: (userData: Omit<User, 'id' | 'status'> & { password: string }) => Promise<{ success: boolean; error?: string }>;
+  refreshUser: () => Promise<void>;
+}
 
-Let me update the profile screen to navigate to `/login` instead of `/welcome`:
+const AuthContext = createContext<AuthContextType | null>(null);
 
-<write file="app/(tabs)/profile.tsx">
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
-import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
-import { useAuth } from '@/contexts/AuthContext';
-import { StorageService } from '@/utils/storage';
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
-export default function ProfileScreen() {
-  const router = useRouter();
-  const { user, logout, refreshUser } = useAuth();
-  const [isEditing, setIsEditing] = useState(false);
-  const [nickname, setNickname] = useState(user?.nickname || '');
+  useEffect(() => {
+    loadUser();
+  }, []);
 
-  const handleSaveNickname = async () => {
+  const loadUser = async () => {
+    try {
+      const currentUser = await StorageService.getCurrentUser();
+      setUser(currentUser);
+    } catch (error) {
+      console.log('Error loading user:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const users = await StorageService.getUsers();
+      const foundUser = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+
+      if (!foundUser) {
+        return { success: false, error: 'Invalid email or password' };
+      }
+
+      if (foundUser.status === 'pending') {
+        return { success: false, error: 'Your account is pending approval.' };
+      }
+
+      if (foundUser.status === 'rejected') {
+        return { success: false, error: 'Your account has been rejected.' };
+      }
+
+      await StorageService.setCurrentUser(foundUser);
+      setUser(foundUser);
+      return { success: true };
+    } catch (error) {
+      console.log('Login error:', error);
+      return { success: false, error: 'An error occurred during login' };
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await StorageService.clearCurrentUser();
+      setUser(null);
+    } catch (error) {
+      console.log('Logout error:', error);
+    }
+  };
+
+  const register = async (userData: Omit<User, 'id' | 'status'> & { password: string }): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const users = await StorageService.getUsers();
+      
+      const existingUser = users.find(u => u.email.toLowerCase() === userData.email.toLowerCase());
+      if (existingUser) {
+        return { success: false, error: 'An account with this email already exists' };
+      }
+
+      const newUser: User = {
+        id: Date.now().toString(),
+        full_name: userData.full_name,
+        email: userData.email,
+        phone: userData.phone,
+        nickname: userData.nickname,
+        status: 'pending',
+      };
+
+      await StorageService.saveUsers([...users, newUser]);
+      return { success: true };
+    } catch (error) {
+      console.log('Registration error:', error);
+      return { success: false, error: 'An error occurred during registration' };
+    }
+  };
+
+  const refreshUser = async () => {
     if (!user) return;
-
-    const users = await StorageService.getUsers();
-    const updatedUsers = users.map(u => 
-      u.id === user.id ? { ...u, nickname } : u
-    );
-    await StorageService.saveUsers(updatedUsers);
-    await refreshUser();
-    setIsEditing(false);
-    Alert.alert('Success', 'Nickname updated successfully');
+    
+    try {
+      const users = await StorageService.getUsers();
+      const updatedUser = users.find(u => u.id === user.id);
+      if (updatedUser) {
+        setUser(updatedUser);
+        await StorageService.setCurrentUser(updatedUser);
+      }
+    } catch (error) {
+      console.log('Error refreshing user:', error);
+    }
   };
-
-  const handleLogout = () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Logout',
-          style: 'destructive',
-          onPress: async () => {
-            await logout();
-            router.replace('/login');
-          },
-        },
-      ]
-    );
-  };
-
-  if (!user) {
-    return null;
-  }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerIcon}>👤</Text>
-        <Text style={styles.headerTitle}>Profile</Text>
-      </View>
-
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        <View style={commonStyles.card}>
-          <View style={styles.profileSection}>
-            <Text style={styles.sectionTitle}>Personal Information</Text>
-            
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Full Name</Text>
-              <Text style={styles.infoValue}>{user.full_name}</Text>
-            </View>
-
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Email</Text>
-              <Text style={styles.infoValue}>{user.email}</Text>
-            </View>
-
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Phone</Text>
-              <Text style={styles.infoValue}>{user.phone}</Text>
-            </View>
-
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Status</Text>
-              <View style={[
-                styles.statusBadge,
-                user.status === 'admin' && styles.statusBadgeAdmin,
-                user.status === 'approved' && styles.statusBadgeApproved,
-              ]}>
-                <Text style={styles.statusBadgeText}>
-                  {user.status.charAt(0).toUpperCase() + user.status.slice(1)}
-                </Text>
-              </View>
-            </View>
-          </View>
-        </View>
-
-        <View style={commonStyles.card}>
-          <View style={styles.profileSection}>
-            <Text style={styles.sectionTitle}>Nickname</Text>
-            
-            {isEditing ? (
-              <>
-                <TextInput
-                  style={commonStyles.input}
-                  value={nickname}
-                  onChangeText={setNickname}
-                  placeholder="Enter nickname"
-                  placeholderTextColor={colors.textSecondary}
-                />
-                <View style={styles.editButtons}>
-                  <TouchableOpacity
-                    style={[buttonStyles.primary, styles.editButton]}
-                    onPress={handleSaveNickname}
-                  >
-                    <Text style={buttonStyles.text}>Save</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[buttonStyles.outline, styles.editButton]}
-                    onPress={() => {
-                      setNickname(user.nickname);
-                      setIsEditing(false);
-                    }}
-                  >
-                    <Text style={buttonStyles.outlineText}>Cancel</Text>
-                  </TouchableOpacity>
-                </View>
-              </>
-            ) : (
-              <>
-                <Text style={styles.nicknameValue}>@{user.nickname}</Text>
-                <TouchableOpacity
-                  style={[buttonStyles.outline, styles.editNicknameButton]}
-                  onPress={() => setIsEditing(true)}
-                >
-                  <Text style={buttonStyles.outlineText}>Edit Nickname</Text>
-                </TouchableOpacity>
-              </>
-            )}
-          </View>
-        </View>
-
-        {user.status === 'admin' && (
-          <View style={commonStyles.card}>
-            <View style={styles.profileSection}>
-              <Text style={styles.sectionTitle}>Admin Actions</Text>
-              <TouchableOpacity
-                style={[buttonStyles.secondary, styles.adminButton]}
-                onPress={() => router.push('/admin/user-approvals')}
-              >
-                <Text style={buttonStyles.text}>User Approvals</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[buttonStyles.secondary, styles.adminButton]}
-                onPress={() => router.push('/admin/tournament-management')}
-              >
-                <Text style={buttonStyles.text}>Tournament Management</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[buttonStyles.secondary, styles.adminButton]}
-                onPress={() => router.push('/admin/rsvp-viewer')}
-              >
-                <Text style={buttonStyles.text}>RSVP Viewer</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
-
-        <TouchableOpacity
-          style={[buttonStyles.outline, styles.logoutButton, { borderColor: colors.error }]}
-          onPress={handleLogout}
-        >
-          <Text style={[buttonStyles.outlineText, { color: colors.error }]}>Logout</Text>
-        </TouchableOpacity>
-      </ScrollView>
-    </View>
+    <AuthContext.Provider value={{ user, loading, login, logout, register, refreshUser }}>
+      {children}
+    </AuthContext.Provider>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  header: {
-    paddingTop: 60,
-    paddingBottom: 20,
-    paddingHorizontal: 20,
-    backgroundColor: colors.card,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    alignItems: 'center',
-  },
-  headerIcon: {
-    fontSize: 48,
-    marginBottom: 8,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: colors.text,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    padding: 16,
-    paddingBottom: 120,
-  },
-  profileSection: {
-    width: '100%',
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: 16,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  infoLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.textSecondary,
-  },
-  infoValue: {
-    fontSize: 16,
-    color: colors.text,
-    fontWeight: '500',
-  },
-  statusBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-    backgroundColor: colors.textSecondary,
-  },
-  statusBadgeAdmin: {
-    backgroundColor: colors.secondary,
-  },
-  statusBadgeApproved: {
-    backgroundColor: colors.success,
-  },
-  statusBadgeText: {
-    color: colors.card,
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  nicknameValue: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 16,
-  },
-  editNicknameButton: {
-    marginTop: 8,
-  },
-  editButtons: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  editButton: {
-    flex: 1,
-  },
-  adminButton: {
-    marginBottom: 12,
-  },
-  logoutButton: {
-    marginTop: 16,
-  },
-});
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+}
