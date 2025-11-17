@@ -3,16 +3,19 @@ import { StyleSheet, ViewStyle, TextStyle } from 'react-native';
 
 export const colors = {
   background: '#f5f5f5',
-  text: '#333333',
-  textSecondary: '#777777',
-  primary: '#2196F3',
-  secondary: '#E91E63',
-  accent: '#FFC107',
+  text: '#1a1a1a',
+  textSecondary: '#666666',
+  primary: '#1a1a1a',
+  secondary: '#8c8c8c',
+  accent: '#c0c0c0',
   card: '#FFFFFF',
-  highlight: '#BBDEFB',
-  error: '#f44336',
-  success: '#4CAF50',
-  border: '#e0e0e0',
+  highlight: '#e8e8e8',
+  error: '#d32f2f',
+  success: '#388e3c',
+  border: '#d9d9d9',
+  silver: '#c0c0c0',
+  darkSilver: '#8c8c8c',
+  black: '#1a1a1a',
 };
 
 export const buttonStyles = StyleSheet.create({

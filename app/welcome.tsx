@@ -1,8 +1,8 @@
 
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
-import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
+import { colors, buttonStyles } from '@/styles/commonStyles';
 import { LinearGradient } from 'expo-linear-gradient';
 
 export default function WelcomeScreen() {
@@ -10,8 +10,10 @@ export default function WelcomeScreen() {
 
   return (
     <LinearGradient
-      colors={[colors.primary, colors.secondary]}
+      colors={[colors.black, colors.darkSilver, colors.silver]}
       style={styles.container}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
     >
       <View style={styles.content}>
         <View style={styles.logoContainer}>
@@ -22,17 +24,17 @@ export default function WelcomeScreen() {
 
         <View style={styles.buttonContainer}>
           <TouchableOpacity
-            style={[buttonStyles.primary, styles.button, { backgroundColor: colors.card }]}
+            style={[styles.button, styles.loginButton]}
             onPress={() => router.push('/login')}
           >
-            <Text style={[buttonStyles.text, { color: colors.primary }]}>Login</Text>
+            <Text style={styles.loginButtonText}>Login</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[buttonStyles.outline, styles.button, { borderColor: colors.card }]}
+            style={[styles.button, styles.requestButton]}
             onPress={() => router.push('/request-access')}
           >
-            <Text style={[buttonStyles.outlineText, { color: colors.card }]}>Request Access</Text>
+            <Text style={styles.requestButtonText}>Request Access</Text>
           </TouchableOpacity>
         </View>
 
@@ -84,6 +86,31 @@ const styles = StyleSheet.create({
   },
   button: {
     width: '100%',
+    paddingVertical: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loginButton: {
+    backgroundColor: colors.card,
+    boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.2)',
+    elevation: 4,
+  },
+  loginButtonText: {
+    color: colors.black,
+    fontSize: 16,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
+  requestButton: {
+    backgroundColor: 'transparent',
+    borderWidth: 2,
+    borderColor: colors.card,
+  },
+  requestButtonText: {
+    color: colors.card,
+    fontSize: 16,
+    fontWeight: '600',
   },
   footer: {
     fontSize: 14,

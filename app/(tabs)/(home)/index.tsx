@@ -130,17 +130,13 @@ export default function HomeScreen() {
                       <Text style={styles.infoText}>{formatDate(tournament.date_time)}</Text>
                     </View>
                     <View style={styles.infoRow}>
-                      <Text style={styles.infoIcon}>📍</Text>
-                      <Text style={styles.infoText}>{tournament.location}</Text>
-                    </View>
-                    <View style={styles.infoRow}>
                       <Text style={styles.infoIcon}>💰</Text>
                       <Text style={styles.infoText}>Buy-in: {tournament.buy_in}</Text>
                     </View>
                     <View style={styles.infoRow}>
                       <Text style={styles.infoIcon}>👥</Text>
                       <Text style={styles.infoText}>
-                        {rsvpCount} / {tournament.max_players} players
+                        {rsvpCount} {rsvpCount === 1 ? 'player' : 'players'}
                       </Text>
                     </View>
                   </View>
@@ -269,7 +265,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   rsvpButtonActive: {
-    backgroundColor: colors.textSecondary,
+    backgroundColor: colors.secondary,
   },
   rsvpButtonDisabled: {
     backgroundColor: colors.border,
