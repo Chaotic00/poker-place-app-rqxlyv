@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, commonStyles } from '@/styles/commonStyles';
 import { Tournament, RSVP } from '@/types';
 import { StorageService } from '@/utils/storage';
@@ -10,6 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 export default function HomeScreen() {
   const router = useRouter();
   const { user } = useAuth();
+  const insets = useSafeAreaInsets();
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [rsvps, setRsvps] = useState<RSVP[]>([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -101,7 +103,10 @@ export default function HomeScreen() {
       <View style={styles.container}>
         <ScrollView
           style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingBottom: insets.bottom + 100 }
+          ]}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
           }
@@ -194,8 +199,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 16,
-    paddingTop: 24,
-    paddingBottom: 120,
+    paddingTop: 16,
   },
   emptyState: {
     alignItems: 'center',
