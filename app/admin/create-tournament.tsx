@@ -135,9 +135,12 @@ export default function CreateTournamentScreen() {
 
           <View style={styles.inputContainer}>
             <Text style={commonStyles.inputLabel}>Blind Structure *</Text>
+            <Text style={styles.helperText}>
+              Format: SB/BB/Ante (e.g., 25/50/50, 50/100/100)
+            </Text>
             <TextInput
               style={[commonStyles.input, styles.textArea]}
-              placeholder="e.g., 25/50, 50/100, 100/200"
+              placeholder="e.g., 25/50/50, 50/100/100, 100/200/200"
               placeholderTextColor={colors.textSecondary}
               value={blindStructure}
               onChangeText={setBlindStructure}
@@ -203,6 +206,12 @@ const styles = StyleSheet.create({
   dateText: {
     fontSize: 16,
     color: colors.text,
+  },
+  helperText: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    marginBottom: 4,
+    fontStyle: 'italic',
   },
   textArea: {
     height: 100,

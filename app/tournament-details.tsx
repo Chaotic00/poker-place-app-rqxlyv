@@ -194,22 +194,23 @@ export default function TournamentDetailsScreen() {
       <View style={styles.blindsContainer}>
         <View style={styles.blindsHeader}>
           <Text style={[styles.blindsHeaderText, { flex: 1 }]}>LEVEL</Text>
-          <Text style={[styles.blindsHeaderText, { flex: 1 }]}>Ante</Text>
           <Text style={[styles.blindsHeaderText, { flex: 1 }]}>SB</Text>
           <Text style={[styles.blindsHeaderText, { flex: 1 }]}>BB</Text>
+          <Text style={[styles.blindsHeaderText, { flex: 1 }]}>Ante</Text>
         </View>
         {blindLevels.map((level, index) => {
           const parts = level.split('/');
           const sb = parts[0] || '-';
           const bb = parts[1] || '-';
+          const ante = parts[2] || '-';
           
           return (
             <React.Fragment key={index}>
               <View style={[styles.blindsRow, index % 2 === 0 && styles.blindsRowAlt]}>
                 <Text style={[styles.blindsCell, { flex: 1 }]}>Lv.{index + 1}</Text>
-                <Text style={[styles.blindsCell, { flex: 1 }]}>-</Text>
                 <Text style={[styles.blindsCell, { flex: 1 }]}>{sb}</Text>
                 <Text style={[styles.blindsCell, { flex: 1 }]}>{bb}</Text>
+                <Text style={[styles.blindsCell, { flex: 1 }]}>{ante}</Text>
               </View>
             </React.Fragment>
           );
