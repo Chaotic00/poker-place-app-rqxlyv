@@ -25,19 +25,22 @@ export default function TabLayout() {
     {
       name: '(home)',
       route: '/(tabs)/(home)/',
-      icon: 'home',
+      androidIcon: 'home',
+      iosIcon: 'house.fill',
       label: 'Home',
     },
     {
       name: 'my-tournaments',
       route: '/(tabs)/my-tournaments',
-      icon: 'event',
+      androidIcon: 'event',
+      iosIcon: 'calendar',
       label: 'My RSVPs',
     },
     {
       name: 'profile',
       route: '/(tabs)/profile',
-      icon: 'person',
+      androidIcon: 'person',
+      iosIcon: 'person.fill',
       label: 'Profile',
     },
   ];
@@ -46,7 +49,8 @@ export default function TabLayout() {
     tabs.push({
       name: 'admin',
       route: '/(tabs)/admin',
-      icon: 'settings',
+      androidIcon: 'settings',
+      iosIcon: 'gearshape.fill',
       label: 'Admin',
     });
   }

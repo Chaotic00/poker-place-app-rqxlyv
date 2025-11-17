@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   View,
@@ -26,7 +27,8 @@ const { width: screenWidth } = Dimensions.get('window');
 export interface TabBarItem {
   name: string;
   route: Href;
-  icon: keyof typeof MaterialIcons.glyphMap;
+  androidIcon: keyof typeof MaterialIcons.glyphMap;
+  iosIcon: string;
   label: string;
 }
 
@@ -176,15 +178,14 @@ export default function FloatingTabBar({
               return (
                 <React.Fragment key={index}>
                 <TouchableOpacity
-                  key={index} // Use index as key
                   style={styles.tab}
                   onPress={() => handleTabPress(tab.route)}
                   activeOpacity={0.7}
                 >
-                  <View key={index} style={styles.tabContent}>
+                  <View style={styles.tabContent}>
                     <IconSymbol
-                      android_material_icon_name={tab.icon}
-                      ios_icon_name={tab.icon}
+                      android_material_icon_name={tab.androidIcon}
+                      ios_icon_name={tab.iosIcon}
                       size={24}
                       color={isActive ? theme.colors.primary : (theme.dark ? '#98989D' : '#000000')}
                     />
