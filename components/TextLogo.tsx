@@ -2,6 +2,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { colors } from '@/styles/commonStyles';
+import { useFonts, Cinzel_400Regular, Cinzel_600SemiBold, Cinzel_900Black } from '@expo-google-fonts/cinzel';
 
 interface TextLogoProps {
   size?: 'small' | 'medium' | 'large';
@@ -9,6 +10,16 @@ interface TextLogoProps {
 }
 
 export default function TextLogo({ size = 'medium', color = colors.card }: TextLogoProps) {
+  const [fontsLoaded] = useFonts({
+    Cinzel_400Regular,
+    Cinzel_600SemiBold,
+    Cinzel_900Black,
+  });
+
+  if (!fontsLoaded) {
+    return null;
+  }
+
   const sizeStyles = {
     small: {
       oval: styles.ovalSmall,
@@ -43,31 +54,38 @@ export default function TextLogo({ size = 'medium', color = colors.card }: TextL
 
 const styles = StyleSheet.create({
   oval: {
-    borderWidth: 3,
+    borderWidth: 5,
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 16,
-    paddingHorizontal: 24,
-  },
-  ovalSmall: {
-    borderRadius: 60,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderWidth: 2,
-  },
-  ovalMedium: {
-    borderRadius: 80,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-  },
-  ovalLarge: {
-    borderRadius: 100,
-    paddingVertical: 20,
     paddingHorizontal: 32,
   },
+  ovalSmall: {
+    borderRadius: 80,
+    paddingVertical: 10,
+    paddingHorizontal: 28,
+    borderWidth: 4,
+    width: 160,
+    height: 100,
+  },
+  ovalMedium: {
+    borderRadius: 120,
+    paddingVertical: 14,
+    paddingHorizontal: 32,
+    width: 240,
+    height: 140,
+  },
+  ovalLarge: {
+    borderRadius: 160,
+    paddingVertical: 18,
+    paddingHorizontal: 40,
+    borderWidth: 6,
+    width: 320,
+    height: 180,
+  },
   the: {
-    fontWeight: '600',
-    letterSpacing: 2,
+    fontFamily: 'Cinzel_600SemiBold',
+    letterSpacing: 3,
   },
   theSmall: {
     fontSize: 12,
@@ -79,9 +97,9 @@ const styles = StyleSheet.create({
     fontSize: 20,
   },
   poker: {
-    fontWeight: '900',
-    letterSpacing: 3,
-    marginVertical: 2,
+    fontFamily: 'Cinzel_900Black',
+    letterSpacing: 4,
+    marginVertical: -2,
   },
   pokerSmall: {
     fontSize: 24,
@@ -93,8 +111,8 @@ const styles = StyleSheet.create({
     fontSize: 48,
   },
   place: {
-    fontWeight: '600',
-    letterSpacing: 2,
+    fontFamily: 'Cinzel_600SemiBold',
+    letterSpacing: 3,
   },
   placeSmall: {
     fontSize: 12,
