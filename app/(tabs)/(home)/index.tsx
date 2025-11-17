@@ -115,7 +115,7 @@ export default function HomeScreen() {
             return (
               <React.Fragment key={index}>
                 <TouchableOpacity
-                  style={commonStyles.card}
+                  style={styles.card}
                   onPress={() => handleTournamentPress(tournament.id)}
                   activeOpacity={0.7}
                 >
@@ -204,8 +204,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: 16,
-    paddingBottom: 120,
+    padding: 20,
+    paddingBottom: 140,
   },
   emptyState: {
     alignItems: 'center',
@@ -220,22 +220,31 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.textSecondary,
   },
+  card: {
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
+    elevation: 3,
+  },
   tournamentHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 20,
   },
   tournamentName: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '700',
     color: colors.text,
     flex: 1,
+    marginRight: 12,
   },
   rsvpBadge: {
     backgroundColor: colors.success,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderRadius: 12,
   },
   rsvpBadgeText: {
@@ -244,27 +253,27 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   tournamentInfo: {
-    marginBottom: 16,
+    marginBottom: 20,
   },
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 12,
   },
   infoIcon: {
-    fontSize: 16,
-    marginRight: 8,
-    width: 24,
+    fontSize: 20,
+    marginRight: 12,
+    width: 28,
   },
   infoText: {
-    fontSize: 14,
+    fontSize: 16,
     color: colors.text,
     flex: 1,
   },
   rsvpButton: {
     backgroundColor: colors.primary,
-    paddingVertical: 12,
-    borderRadius: 8,
+    paddingVertical: 14,
+    borderRadius: 10,
     alignItems: 'center',
     marginTop: 8,
   },
