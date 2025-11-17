@@ -36,16 +36,22 @@ export default function ProfileScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              console.log('User confirmed logout - starting logout process');
+              console.log('=== USER CONFIRMED LOGOUT ===');
+              console.log('Calling logout function...');
+              
+              // Call logout and wait for it to complete
               await logout();
-              console.log('Logout complete - navigating to welcome');
-              // Use replace with a slight delay to ensure state is updated
-              setTimeout(() => {
-                router.replace('/welcome');
-              }, 100);
+              
+              console.log('Logout function completed');
+              console.log('Navigating to welcome screen...');
+              
+              // Navigate to welcome screen - use replace to prevent back navigation
+              router.replace('/welcome');
+              
+              console.log('Navigation command sent');
             } catch (error) {
-              console.log('Error during logout:', error);
-              // Still try to navigate even if there's an error
+              console.log('Error during logout process:', error);
+              // Even if there's an error, try to navigate
               router.replace('/welcome');
             }
           },

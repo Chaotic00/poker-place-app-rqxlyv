@@ -91,13 +91,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     try {
-      console.log('Logout initiated - clearing user data');
+      console.log('=== LOGOUT STARTED ===');
+      console.log('Step 1: Clearing AsyncStorage');
       await StorageService.clearCurrentUser();
-      console.log('User data cleared from storage');
+      console.log('Step 2: AsyncStorage cleared successfully');
+      console.log('Step 3: Setting user state to null');
       setUser(null);
-      console.log('User state set to null - logout complete');
+      console.log('Step 4: User state set to null');
+      console.log('=== LOGOUT COMPLETED ===');
     } catch (error) {
       console.log('Logout error:', error);
+      // Even if there's an error, set user to null to ensure logout
+      setUser(null);
       throw error;
     }
   };

@@ -26,30 +26,44 @@ function RootLayoutNav() {
   const navigationState = useRootNavigationState();
 
   useEffect(() => {
+    // Don't do anything while navigation is not ready or auth is loading
     if (!navigationState?.key || loading) {
-      console.log('Navigation not ready or loading:', { navigationReady: !!navigationState?.key, loading });
+      console.log('Navigation guard: Waiting...', { 
+        navigationReady: !!navigationState?.key, 
+        authLoading: loading 
+      });
       return;
     }
 
+    const currentPath = segments.join('/');
     const inAuthGroup = segments[0] === '(tabs)';
     const onAuthScreen = segments[0] === 'welcome' || segments[0] === 'login' || segments[0] === 'request-access';
+    const onAdminScreen = segments[0] === 'admin';
+    const onTournamentDetails = segments[0] === 'tournament-details';
     
-    console.log('Navigation guard check:', { 
-      user: !!user, 
-      inAuthGroup, 
-      onAuthScreen,
-      segments: segments.join('/') 
-    });
+    console.log('=== NAVIGATION GUARD CHECK ===');
+    console.log('Current path:', currentPath);
+    console.log('User authenticated:', !!user);
+    console.log('In auth group (tabs):', inAuthGroup);
+    console.log('On auth screen:', onAuthScreen);
+    console.log('On admin screen:', onAdminScreen);
+    console.log('On tournament details:', onTournamentDetails);
 
-    if (!user && inAuthGroup) {
-      // Redirect to welcome if not authenticated and trying to access tabs
-      console.log('Redirecting to welcome - user not authenticated');
+    // If user is not authenticated and trying to access protected routes
+    if (!user && (inAuthGroup || onAdminScreen || onTournamentDetails)) {
+      console.log('❌ Redirecting to welcome - user not authenticated');
       router.replace('/welcome');
-    } else if (user && onAuthScreen) {
-      // Redirect to home if authenticated and on auth screens
-      console.log('Redirecting to home - user authenticated on auth screen');
-      router.replace('/(tabs)/(home)');
+      return;
     }
+
+    // If user is authenticated and on auth screens, redirect to home
+    if (user && onAuthScreen) {
+      console.log('✅ Redirecting to home - user authenticated on auth screen');
+      router.replace('/(tabs)/(home)');
+      return;
+    }
+
+    console.log('✓ Navigation guard passed');
   }, [user, segments, navigationState, loading]);
 
   return (
