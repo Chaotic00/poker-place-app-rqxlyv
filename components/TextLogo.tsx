@@ -2,7 +2,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { colors } from '@/styles/commonStyles';
-import { useFonts, Cinzel_400Regular, Cinzel_600SemiBold, Cinzel_900Black } from '@expo-google-fonts/cinzel';
+import { useFonts, Oswald_400Regular, Oswald_600SemiBold, Oswald_700Bold } from '@expo-google-fonts/oswald';
 
 interface TextLogoProps {
   size?: 'small' | 'medium' | 'large';
@@ -11,9 +11,9 @@ interface TextLogoProps {
 
 export default function TextLogo({ size = 'medium', color = colors.card }: TextLogoProps) {
   const [fontsLoaded] = useFonts({
-    Cinzel_400Regular,
-    Cinzel_600SemiBold,
-    Cinzel_900Black,
+    Oswald_400Regular,
+    Oswald_600SemiBold,
+    Oswald_700Bold,
   });
 
   if (!fontsLoaded) {
@@ -61,7 +61,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
   },
   ovalSmall: {
-    borderRadius: 80,
+    borderRadius: 50,
     paddingVertical: 10,
     paddingHorizontal: 28,
     borderWidth: 4,
@@ -69,14 +69,14 @@ const styles = StyleSheet.create({
     height: 100,
   },
   ovalMedium: {
-    borderRadius: 120,
+    borderRadius: 70,
     paddingVertical: 14,
     paddingHorizontal: 32,
     width: 240,
     height: 140,
   },
   ovalLarge: {
-    borderRadius: 160,
+    borderRadius: 90,
     paddingVertical: 18,
     paddingHorizontal: 40,
     borderWidth: 6,
@@ -84,22 +84,22 @@ const styles = StyleSheet.create({
     height: 180,
   },
   the: {
-    fontFamily: 'Cinzel_600SemiBold',
-    letterSpacing: 3,
+    fontFamily: 'Oswald_600SemiBold',
+    letterSpacing: 1,
   },
   theSmall: {
-    fontSize: 12,
+    fontSize: 14,
   },
   theMedium: {
-    fontSize: 16,
+    fontSize: 18,
   },
   theLarge: {
-    fontSize: 20,
+    fontSize: 24,
   },
   poker: {
-    fontFamily: 'Cinzel_900Black',
-    letterSpacing: 4,
-    marginVertical: -2,
+    fontFamily: 'Oswald_700Bold',
+    letterSpacing: 2,
+    marginVertical: -4,
   },
   pokerSmall: {
     fontSize: 24,
@@ -111,16 +111,16 @@ const styles = StyleSheet.create({
     fontSize: 48,
   },
   place: {
-    fontFamily: 'Cinzel_600SemiBold',
-    letterSpacing: 3,
+    fontFamily: 'Oswald_600SemiBold',
+    letterSpacing: 1,
   },
   placeSmall: {
-    fontSize: 12,
+    fontSize: 14,
   },
   placeMedium: {
-    fontSize: 16,
+    fontSize: 18,
   },
   placeLarge: {
-    fontSize: 20,
+    fontSize: 24,
   },
 });
