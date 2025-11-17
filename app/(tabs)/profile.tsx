@@ -1,10 +1,10 @@
 
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
 import { useAuth } from '@/contexts/AuthContext';
 import { StorageService } from '@/utils/storage';
+import { useRouter } from 'expo-router';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -37,8 +37,7 @@ export default function ProfileScreen() {
           onPress: async () => {
             console.log('User confirmed logout');
             await logout();
-            console.log('Redirecting to login page');
-            router.replace('/login');
+            // Navigation is now handled in the logout function
           },
         },
       ]

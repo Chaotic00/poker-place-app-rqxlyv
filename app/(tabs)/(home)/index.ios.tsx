@@ -36,7 +36,10 @@ export default function HomeScreen() {
     setRefreshing(false);
   };
 
-  const handleRSVP = async (tournamentId: string) => {
+  const handleRSVP = async (tournamentId: string, event: any) => {
+    // Stop event propagation to prevent navigation
+    event.stopPropagation();
+    
     if (!user) return;
 
     const existingRSVP = rsvps.find(
@@ -58,6 +61,14 @@ export default function HomeScreen() {
 
     await StorageService.saveRSVPs(updatedRsvps);
     setRsvps(updatedRsvps);
+  };
+
+  const handleTournamentPress = (tournamentId: string) => {
+    console.log('Navigating to tournament details:', tournamentId);
+    router.push({
+      pathname: '/tournament-details',
+      params: { id: tournamentId }
+    });
   };
 
   const isRSVPd = (tournamentId: string) => {
@@ -108,44 +119,37 @@ export default function HomeScreen() {
 
               return (
                 <React.Fragment key={index}>
-                  <TouchableOpacity
-                    key={tournament.id}
-                    style={commonStyles.card}
-                    onPress={() => router.push({
-                      pathname: '/tournament-details',
-                      params: { id: tournament.id }
-                    })}
-                    activeOpacity={0.7}
-                  >
-                    <View style={styles.tournamentHeader}>
-                      <Text style={styles.tournamentName}>{tournament.name}</Text>
-                      {isUserRSVPd && (
-                        <View style={styles.rsvpBadge}>
-                          <Text style={styles.rsvpBadgeText}>✓ RSVP&apos;d</Text>
-                        </View>
-                      )}
-                    </View>
+                  <View style={commonStyles.card}>
+                    <TouchableOpacity
+                      onPress={() => handleTournamentPress(tournament.id)}
+                      activeOpacity={0.7}
+                    >
+                      <View style={styles.tournamentHeader}>
+                        <Text style={styles.tournamentName}>{tournament.name}</Text>
+                        {isUserRSVPd && (
+                          <View style={styles.rsvpBadge}>
+                            <Text style={styles.rsvpBadgeText}>✓ RSVP&apos;d</Text>
+                          </View>
+                        )}
+                      </View>
 
-                    <View style={styles.tournamentInfo}>
-                      <View style={styles.infoRow}>
-                        <Text style={styles.infoIcon}>📅</Text>
-                        <Text style={styles.infoText}>{formatDate(tournament.date_time)}</Text>
+                      <View style={styles.tournamentInfo}>
+                        <View style={styles.infoRow}>
+                          <Text style={styles.infoIcon}>📅</Text>
+                          <Text style={styles.infoText}>{formatDate(tournament.date_time)}</Text>
+                        </View>
+                        <View style={styles.infoRow}>
+                          <Text style={styles.infoIcon}>💰</Text>
+                          <Text style={styles.infoText}>Buy-in: {tournament.buy_in}</Text>
+                        </View>
+                        <View style={styles.infoRow}>
+                          <Text style={styles.infoIcon}>👥</Text>
+                          <Text style={styles.infoText}>
+                            {rsvpCount} {rsvpCount === 1 ? 'player' : 'players'}
+                          </Text>
+                        </View>
                       </View>
-                      <View style={styles.infoRow}>
-                        <Text style={styles.infoIcon}>📍</Text>
-                        <Text style={styles.infoText}>{tournament.location}</Text>
-                      </View>
-                      <View style={styles.infoRow}>
-                        <Text style={styles.infoIcon}>💰</Text>
-                        <Text style={styles.infoText}>Buy-in: {tournament.buy_in}</Text>
-                      </View>
-                      <View style={styles.infoRow}>
-                        <Text style={styles.infoIcon}>👥</Text>
-                        <Text style={styles.infoText}>
-                          {rsvpCount} / {tournament.max_players} players
-                        </Text>
-                      </View>
-                    </View>
+                    </TouchableOpacity>
 
                     {user?.status === 'approved' && (
                       <TouchableOpacity
@@ -155,9 +159,8 @@ export default function HomeScreen() {
                           isFull && !isUserRSVPd && styles.rsvpButtonDisabled,
                         ]}
                         onPress={(e) => {
-                          e.stopPropagation();
                           if (!isFull || isUserRSVPd) {
-                            handleRSVP(tournament.id);
+                            handleRSVP(tournament.id, e);
                           }
                         }}
                         disabled={isFull && !isUserRSVPd}
@@ -170,7 +173,7 @@ export default function HomeScreen() {
                         </Text>
                       </TouchableOpacity>
                     )}
-                  </TouchableOpacity>
+                  </View>
                 </React.Fragment>
               );
             })
@@ -252,6 +255,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',
+    marginTop: 8,
   },
   rsvpButtonActive: {
     backgroundColor: colors.textSecondary,
