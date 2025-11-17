@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
 import { Tournament, RSVP, User } from '@/types';
@@ -10,31 +10,66 @@ import { useAuth } from '@/contexts/AuthContext';
 type TabType = 'main' | 'blinds';
 
 export default function TournamentDetailsScreen() {
-  const { id } = useLocalSearchParams();
+  const params = useLocalSearchParams();
   const router = useRouter();
   const { user } = useAuth();
   const [tournament, setTournament] = useState<Tournament | null>(null);
   const [rsvps, setRsvps] = useState<RSVP[]>([]);
   const [rsvpUsers, setRsvpUsers] = useState<User[]>([]);
   const [activeTab, setActiveTab] = useState<TabType>('main');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Get the tournament ID from params
+  const tournamentId = typeof params.id === 'string' ? params.id : Array.isArray(params.id) ? params.id[0] : null;
 
   useEffect(() => {
-    loadData();
-  }, [id]);
+    console.log('Tournament details screen mounted with params:', params);
+    console.log('Tournament ID:', tournamentId);
+    if (tournamentId) {
+      loadData();
+    } else {
+      setError('No tournament ID provided');
+      setLoading(false);
+    }
+  }, [tournamentId]);
 
   const loadData = async () => {
-    const tournaments = await StorageService.getTournaments();
-    const foundTournament = tournaments.find(t => t.id === id);
-    setTournament(foundTournament || null);
+    try {
+      setLoading(true);
+      setError(null);
+      
+      console.log('Loading tournament data for ID:', tournamentId);
+      const tournaments = await StorageService.getTournaments();
+      console.log('Total tournaments:', tournaments.length);
+      
+      const foundTournament = tournaments.find(t => t.id === tournamentId);
+      console.log('Found tournament:', foundTournament?.name);
+      
+      if (!foundTournament) {
+        setError('Tournament not found');
+        setLoading(false);
+        return;
+      }
+      
+      setTournament(foundTournament);
 
-    const allRsvps = await StorageService.getRSVPs();
-    const tournamentRsvps = allRsvps.filter(r => r.tournament_id === id);
-    setRsvps(tournamentRsvps);
+      const allRsvps = await StorageService.getRSVPs();
+      const tournamentRsvps = allRsvps.filter(r => r.tournament_id === tournamentId);
+      console.log('Tournament RSVPs:', tournamentRsvps.length);
+      setRsvps(tournamentRsvps);
 
-    const users = await StorageService.getUsers();
-    const rsvpUserIds = tournamentRsvps.map(r => r.user_id);
-    const rsvpUsersList = users.filter(u => rsvpUserIds.includes(u.id));
-    setRsvpUsers(rsvpUsersList);
+      const users = await StorageService.getUsers();
+      const rsvpUserIds = tournamentRsvps.map(r => r.user_id);
+      const rsvpUsersList = users.filter(u => rsvpUserIds.includes(u.id));
+      setRsvpUsers(rsvpUsersList);
+      
+      setLoading(false);
+    } catch (err) {
+      console.log('Error loading tournament data:', err);
+      setError('Failed to load tournament data');
+      setLoading(false);
+    }
   };
 
   const handleRSVP = async () => {
@@ -75,10 +110,26 @@ export default function TournamentDetailsScreen() {
     });
   };
 
-  if (!tournament) {
+  if (loading) {
     return (
-      <View style={styles.container}>
-        <Text style={commonStyles.text}>Tournament not found</Text>
+      <View style={[styles.container, styles.centerContent]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={[styles.loadingText, { marginTop: 16 }]}>Loading tournament...</Text>
+      </View>
+    );
+  }
+
+  if (error || !tournament) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <Text style={styles.errorIcon}>⚠️</Text>
+        <Text style={styles.errorText}>{error || 'Tournament not found'}</Text>
+        <TouchableOpacity
+          style={[buttonStyles.primary, { marginTop: 20 }]}
+          onPress={() => router.back()}
+        >
+          <Text style={buttonStyles.text}>Go Back</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -264,6 +315,25 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: colors.textSecondary,
+  },
+  errorIcon: {
+    fontSize: 60,
+    marginBottom: 16,
+  },
+  errorText: {
+    fontSize: 18,
+    color: colors.text,
+    textAlign: 'center',
+    marginBottom: 8,
   },
   headerSection: {
     flexDirection: 'row',

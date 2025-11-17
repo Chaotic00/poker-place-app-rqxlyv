@@ -32,15 +32,22 @@ function RootLayoutNav() {
     }
 
     const inAuthGroup = segments[0] === '(tabs)';
-    console.log('Navigation guard check:', { user: !!user, inAuthGroup, segments });
+    const onAuthScreen = segments[0] === 'welcome' || segments[0] === 'login' || segments[0] === 'request-access';
+    
+    console.log('Navigation guard check:', { 
+      user: !!user, 
+      inAuthGroup, 
+      onAuthScreen,
+      segments: segments.join('/') 
+    });
 
     if (!user && inAuthGroup) {
       // Redirect to welcome if not authenticated and trying to access tabs
       console.log('Redirecting to welcome - user not authenticated');
       router.replace('/welcome');
-    } else if (user && (segments[0] === 'welcome' || segments[0] === 'login' || segments[0] === 'request-access')) {
+    } else if (user && onAuthScreen) {
       // Redirect to home if authenticated and on auth screens
-      console.log('Redirecting to home - user authenticated');
+      console.log('Redirecting to home - user authenticated on auth screen');
       router.replace('/(tabs)/(home)');
     }
   }, [user, segments, navigationState, loading]);
@@ -55,6 +62,7 @@ function RootLayoutNav() {
         name="tournament-details"
         options={{
           headerShown: false,
+          presentation: 'card',
         }}
       />
       <Stack.Screen

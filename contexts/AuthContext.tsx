@@ -95,9 +95,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await StorageService.clearCurrentUser();
       console.log('User data cleared from storage');
       setUser(null);
-      console.log('User state set to null');
+      console.log('User state set to null - logout complete');
     } catch (error) {
       console.log('Logout error:', error);
+      throw error;
     }
   };
 
