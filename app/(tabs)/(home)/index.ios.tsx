@@ -194,7 +194,8 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 16,
-    paddingBottom: 40,
+    paddingTop: 24,
+    paddingBottom: 120,
   },
   emptyState: {
     alignItems: 'center',
