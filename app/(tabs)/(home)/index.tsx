@@ -64,11 +64,8 @@ export default function HomeScreen() {
   };
 
   const handleTournamentPress = (tournamentId: string) => {
-    console.log('Navigating to tournament details:', tournamentId);
-    router.push({
-      pathname: '/tournament-details',
-      params: { id: tournamentId }
-    });
+    console.log('Tournament card pressed, navigating to:', tournamentId);
+    router.push(`/tournament-details?id=${tournamentId}`);
   };
 
   const isRSVPd = (tournamentId: string) => {
@@ -117,37 +114,36 @@ export default function HomeScreen() {
 
             return (
               <React.Fragment key={index}>
-                <View style={commonStyles.card}>
-                  <TouchableOpacity
-                    onPress={() => handleTournamentPress(tournament.id)}
-                    activeOpacity={0.7}
-                  >
-                    <View style={styles.tournamentHeader}>
-                      <Text style={styles.tournamentName}>{tournament.name}</Text>
-                      {isUserRSVPd && (
-                        <View style={styles.rsvpBadge}>
-                          <Text style={styles.rsvpBadgeText}>✓ RSVP&apos;d</Text>
-                        </View>
-                      )}
-                    </View>
+                <TouchableOpacity
+                  style={commonStyles.card}
+                  onPress={() => handleTournamentPress(tournament.id)}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.tournamentHeader}>
+                    <Text style={styles.tournamentName}>{tournament.name}</Text>
+                    {isUserRSVPd && (
+                      <View style={styles.rsvpBadge}>
+                        <Text style={styles.rsvpBadgeText}>✓ RSVP&apos;d</Text>
+                      </View>
+                    )}
+                  </View>
 
-                    <View style={styles.tournamentInfo}>
-                      <View style={styles.infoRow}>
-                        <Text style={styles.infoIcon}>📅</Text>
-                        <Text style={styles.infoText}>{formatDate(tournament.date_time)}</Text>
-                      </View>
-                      <View style={styles.infoRow}>
-                        <Text style={styles.infoIcon}>💰</Text>
-                        <Text style={styles.infoText}>Buy-in: {tournament.buy_in}</Text>
-                      </View>
-                      <View style={styles.infoRow}>
-                        <Text style={styles.infoIcon}>👥</Text>
-                        <Text style={styles.infoText}>
-                          {rsvpCount} {rsvpCount === 1 ? 'player' : 'players'}
-                        </Text>
-                      </View>
+                  <View style={styles.tournamentInfo}>
+                    <View style={styles.infoRow}>
+                      <Text style={styles.infoIcon}>📅</Text>
+                      <Text style={styles.infoText}>{formatDate(tournament.date_time)}</Text>
                     </View>
-                  </TouchableOpacity>
+                    <View style={styles.infoRow}>
+                      <Text style={styles.infoIcon}>💰</Text>
+                      <Text style={styles.infoText}>Buy-in: {tournament.buy_in}</Text>
+                    </View>
+                    <View style={styles.infoRow}>
+                      <Text style={styles.infoIcon}>👥</Text>
+                      <Text style={styles.infoText}>
+                        {rsvpCount} {rsvpCount === 1 ? 'player' : 'players'}
+                      </Text>
+                    </View>
+                  </View>
 
                   {user?.status === 'approved' && (
                     <TouchableOpacity
@@ -171,7 +167,7 @@ export default function HomeScreen() {
                       </Text>
                     </TouchableOpacity>
                   )}
-                </View>
+                </TouchableOpacity>
               </React.Fragment>
             );
           })

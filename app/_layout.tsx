@@ -26,15 +26,21 @@ function RootLayoutNav() {
   const navigationState = useRootNavigationState();
 
   useEffect(() => {
-    if (!navigationState?.key || loading) return;
+    if (!navigationState?.key || loading) {
+      console.log('Navigation not ready or loading:', { navigationReady: !!navigationState?.key, loading });
+      return;
+    }
 
     const inAuthGroup = segments[0] === '(tabs)';
+    console.log('Navigation guard check:', { user: !!user, inAuthGroup, segments });
 
     if (!user && inAuthGroup) {
       // Redirect to welcome if not authenticated and trying to access tabs
+      console.log('Redirecting to welcome - user not authenticated');
       router.replace('/welcome');
-    } else if (user && !inAuthGroup) {
-      // Redirect to home if authenticated and not in tabs
+    } else if (user && (segments[0] === 'welcome' || segments[0] === 'login' || segments[0] === 'request-access')) {
+      // Redirect to home if authenticated and on auth screens
+      console.log('Redirecting to home - user authenticated');
       router.replace('/(tabs)/(home)');
     }
   }, [user, segments, navigationState, loading]);
@@ -48,8 +54,7 @@ function RootLayoutNav() {
       <Stack.Screen
         name="tournament-details"
         options={{
-          presentation: "modal",
-          title: "Tournament Details",
+          headerShown: false,
         }}
       />
       <Stack.Screen

@@ -2,7 +2,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '@/types';
 import { StorageService } from '@/utils/storage';
-import { router } from 'expo-router';
 
 interface AuthContextType {
   user: User | null;
@@ -92,12 +91,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     try {
-      console.log('Logging out user');
+      console.log('Logout initiated - clearing user data');
       await StorageService.clearCurrentUser();
+      console.log('User data cleared from storage');
       setUser(null);
-      console.log('User cleared, navigating to login');
-      // Navigate to login immediately after clearing user
-      router.replace('/login');
+      console.log('User state set to null');
     } catch (error) {
       console.log('Logout error:', error);
     }
