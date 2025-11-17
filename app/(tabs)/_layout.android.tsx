@@ -1,26 +1,13 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Stack } from 'expo-router';
 import FloatingTabBar, { TabBarItem } from '@/components/FloatingTabBar';
 import { useAuth } from '@/contexts/AuthContext';
-import { useRouter, useSegments } from 'expo-router';
 import { View, ActivityIndicator } from 'react-native';
 import { colors } from '@/styles/commonStyles';
 
 export default function TabLayout() {
   const { user, loading } = useAuth();
-  const router = useRouter();
-  const segments = useSegments();
-
-  useEffect(() => {
-    console.log('iOS Tab Layout - User:', user?.email, 'Loading:', loading);
-    console.log('iOS Tab Layout - Current segments:', segments);
-    
-    if (!loading && !user) {
-      console.log('iOS Tab Layout - No user, redirecting to welcome');
-      router.replace('/welcome');
-    }
-  }, [user, loading, router]);
 
   if (loading) {
     return (
