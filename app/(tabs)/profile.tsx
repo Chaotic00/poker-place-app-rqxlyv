@@ -1,91 +1,270 @@
-import React from "react";
-import { View, Text, StyleSheet, ScrollView, Platform } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { IconSymbol } from "@/components/IconSymbol";
-import { GlassView } from "expo-glass-effect";
-import { useTheme } from "@react-navigation/native";
+
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native';
+import { useRouter } from 'expo-router';
+import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
+import { useAuth } from '@/contexts/AuthContext';
+import { StorageService } from '@/utils/storage';
 
 export default function ProfileScreen() {
-  const theme = useTheme();
+  const router = useRouter();
+  const { user, logout, refreshUser } = useAuth();
+  const [isEditing, setIsEditing] = useState(false);
+  const [nickname, setNickname] = useState(user?.nickname || '');
+
+  const handleSaveNickname = async () => {
+    if (!user) return;
+
+    const users = await StorageService.getUsers();
+    const updatedUsers = users.map(u => 
+      u.id === user.id ? { ...u, nickname } : u
+    );
+    await StorageService.saveUsers(updatedUsers);
+    await refreshUser();
+    setIsEditing(false);
+    Alert.alert('Success', 'Nickname updated successfully');
+  };
+
+  const handleLogout = () => {
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to logout?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Logout',
+          style: 'destructive',
+          onPress: async () => {
+            await logout();
+            router.replace('/welcome');
+          },
+        },
+      ]
+    );
+  };
+
+  if (!user) {
+    return null;
+  }
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.colors.background }]} edges={['top']}>
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={[
-          styles.contentContainer,
-          Platform.OS !== 'ios' && styles.contentContainerWithTabBar
-        ]}
-      >
-        <GlassView style={[
-          styles.profileHeader,
-          Platform.OS !== 'ios' && { backgroundColor: theme.dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }
-        ]} glassEffectStyle="regular">
-          <IconSymbol ios_icon_name="person.circle.fill" android_material_icon_name="person" size={80} color={theme.colors.primary} />
-          <Text style={[styles.name, { color: theme.colors.text }]}>John Doe</Text>
-          <Text style={[styles.email, { color: theme.dark ? '#98989D' : '#666' }]}>john.doe@example.com</Text>
-        </GlassView>
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.headerIcon}>👤</Text>
+        <Text style={styles.headerTitle}>Profile</Text>
+      </View>
 
-        <GlassView style={[
-          styles.section,
-          Platform.OS !== 'ios' && { backgroundColor: theme.dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }
-        ]} glassEffectStyle="regular">
-          <View style={styles.infoRow}>
-            <IconSymbol ios_icon_name="phone.fill" android_material_icon_name="phone" size={20} color={theme.dark ? '#98989D' : '#666'} />
-            <Text style={[styles.infoText, { color: theme.colors.text }]}>+1 (555) 123-4567</Text>
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+        <View style={commonStyles.card}>
+          <View style={styles.profileSection}>
+            <Text style={styles.sectionTitle}>Personal Information</Text>
+            
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Full Name</Text>
+              <Text style={styles.infoValue}>{user.full_name}</Text>
+            </View>
+
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Email</Text>
+              <Text style={styles.infoValue}>{user.email}</Text>
+            </View>
+
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Phone</Text>
+              <Text style={styles.infoValue}>{user.phone}</Text>
+            </View>
+
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Status</Text>
+              <View style={[
+                styles.statusBadge,
+                user.status === 'admin' && styles.statusBadgeAdmin,
+                user.status === 'approved' && styles.statusBadgeApproved,
+              ]}>
+                <Text style={styles.statusBadgeText}>
+                  {user.status.charAt(0).toUpperCase() + user.status.slice(1)}
+                </Text>
+              </View>
+            </View>
           </View>
-          <View style={styles.infoRow}>
-            <IconSymbol ios_icon_name="location.fill" android_material_icon_name="location-on" size={20} color={theme.dark ? '#98989D' : '#666'} />
-            <Text style={[styles.infoText, { color: theme.colors.text }]}>San Francisco, CA</Text>
+        </View>
+
+        <View style={commonStyles.card}>
+          <View style={styles.profileSection}>
+            <Text style={styles.sectionTitle}>Nickname</Text>
+            
+            {isEditing ? (
+              <>
+                <TextInput
+                  style={commonStyles.input}
+                  value={nickname}
+                  onChangeText={setNickname}
+                  placeholder="Enter nickname"
+                  placeholderTextColor={colors.textSecondary}
+                />
+                <View style={styles.editButtons}>
+                  <TouchableOpacity
+                    style={[buttonStyles.primary, styles.editButton]}
+                    onPress={handleSaveNickname}
+                  >
+                    <Text style={buttonStyles.text}>Save</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[buttonStyles.outline, styles.editButton]}
+                    onPress={() => {
+                      setNickname(user.nickname);
+                      setIsEditing(false);
+                    }}
+                  >
+                    <Text style={buttonStyles.outlineText}>Cancel</Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            ) : (
+              <>
+                <Text style={styles.nicknameValue}>@{user.nickname}</Text>
+                <TouchableOpacity
+                  style={[buttonStyles.outline, styles.editNicknameButton]}
+                  onPress={() => setIsEditing(true)}
+                >
+                  <Text style={buttonStyles.outlineText}>Edit Nickname</Text>
+                </TouchableOpacity>
+              </>
+            )}
           </View>
-        </GlassView>
+        </View>
+
+        {user.status === 'admin' && (
+          <View style={commonStyles.card}>
+            <View style={styles.profileSection}>
+              <Text style={styles.sectionTitle}>Admin Actions</Text>
+              <TouchableOpacity
+                style={[buttonStyles.secondary, styles.adminButton]}
+                onPress={() => router.push('/admin/user-approvals')}
+              >
+                <Text style={buttonStyles.text}>User Approvals</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[buttonStyles.secondary, styles.adminButton]}
+                onPress={() => router.push('/admin/tournament-management')}
+              >
+                <Text style={buttonStyles.text}>Tournament Management</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[buttonStyles.secondary, styles.adminButton]}
+                onPress={() => router.push('/admin/rsvp-viewer')}
+              >
+                <Text style={buttonStyles.text}>RSVP Viewer</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
+        <TouchableOpacity
+          style={[buttonStyles.outline, styles.logoutButton, { borderColor: colors.error }]}
+          onPress={handleLogout}
+        >
+          <Text style={[buttonStyles.outlineText, { color: colors.error }]}>Logout</Text>
+        </TouchableOpacity>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    // backgroundColor handled dynamically
-  },
   container: {
     flex: 1,
+    backgroundColor: colors.background,
   },
-  contentContainer: {
-    padding: 20,
-  },
-  contentContainerWithTabBar: {
-    paddingBottom: 100, // Extra padding for floating tab bar
-  },
-  profileHeader: {
+  header: {
+    paddingTop: 60,
+    paddingBottom: 20,
+    paddingHorizontal: 20,
+    backgroundColor: colors.card,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
     alignItems: 'center',
-    borderRadius: 12,
-    padding: 32,
-    marginBottom: 16,
-    gap: 12,
   },
-  name: {
+  headerIcon: {
+    fontSize: 48,
+    marginBottom: 8,
+  },
+  headerTitle: {
     fontSize: 24,
-    fontWeight: 'bold',
-    // color handled dynamically
+    fontWeight: '800',
+    color: colors.text,
   },
-  email: {
-    fontSize: 16,
-    // color handled dynamically
+  scrollView: {
+    flex: 1,
   },
-  section: {
-    borderRadius: 12,
-    padding: 20,
-    gap: 12,
+  scrollContent: {
+    padding: 16,
+    paddingBottom: 120,
+  },
+  profileSection: {
+    width: '100%',
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 16,
   },
   infoRow: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  infoLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.textSecondary,
+  },
+  infoValue: {
+    fontSize: 16,
+    color: colors.text,
+    fontWeight: '500',
+  },
+  statusBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    backgroundColor: colors.textSecondary,
+  },
+  statusBadgeAdmin: {
+    backgroundColor: colors.secondary,
+  },
+  statusBadgeApproved: {
+    backgroundColor: colors.success,
+  },
+  statusBadgeText: {
+    color: colors.card,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  nicknameValue: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 16,
+  },
+  editNicknameButton: {
+    marginTop: 8,
+  },
+  editButtons: {
+    flexDirection: 'row',
     gap: 12,
   },
-  infoText: {
-    fontSize: 16,
-    // color handled dynamically
+  editButton: {
+    flex: 1,
+  },
+  adminButton: {
+    marginBottom: 12,
+  },
+  logoutButton: {
+    marginTop: 16,
   },
 });

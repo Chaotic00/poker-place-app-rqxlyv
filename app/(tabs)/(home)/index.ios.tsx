@@ -1,32 +1,181 @@
-import React from "react";
-import { Stack } from "expo-router";
-import { FlatList, StyleSheet, View } from "react-native";
-import { useTheme } from "@react-navigation/native";
-import { modalDemos } from "@/components/homeData";
-import { DemoCard } from "@/components/DemoCard";
-import { HeaderRightButton, HeaderLeftButton } from "@/components/HeaderButtons";
+
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
+import { Stack, useRouter } from 'expo-router';
+import { colors, commonStyles } from '@/styles/commonStyles';
+import { Tournament, RSVP } from '@/types';
+import { StorageService } from '@/utils/storage';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function HomeScreen() {
-  const theme = useTheme();
+  const router = useRouter();
+  const { user } = useAuth();
+  const [tournaments, setTournaments] = useState<Tournament[]>([]);
+  const [rsvps, setRsvps] = useState<RSVP[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    const tournamentsData = await StorageService.getTournaments();
+    const rsvpsData = await StorageService.getRSVPs();
+    
+    const sortedTournaments = tournamentsData.sort((a, b) => 
+      new Date(a.date_time).getTime() - new Date(b.date_time).getTime()
+    );
+    
+    setTournaments(sortedTournaments);
+    setRsvps(rsvpsData);
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadData();
+    setRefreshing(false);
+  };
+
+  const handleRSVP = async (tournamentId: string) => {
+    if (!user) return;
+
+    const existingRSVP = rsvps.find(
+      r => r.tournament_id === tournamentId && r.user_id === user.id
+    );
+
+    let updatedRsvps: RSVP[];
+    if (existingRSVP) {
+      updatedRsvps = rsvps.filter(r => r.id !== existingRSVP.id);
+    } else {
+      const newRSVP: RSVP = {
+        id: Date.now().toString(),
+        user_id: user.id,
+        tournament_id: tournamentId,
+        timestamp: new Date().toISOString(),
+      };
+      updatedRsvps = [...rsvps, newRSVP];
+    }
+
+    await StorageService.saveRSVPs(updatedRsvps);
+    setRsvps(updatedRsvps);
+  };
+
+  const isRSVPd = (tournamentId: string) => {
+    return rsvps.some(r => r.tournament_id === tournamentId && r.user_id === user?.id);
+  };
+
+  const getRSVPCount = (tournamentId: string) => {
+    return rsvps.filter(r => r.tournament_id === tournamentId).length;
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    });
+  };
 
   return (
     <>
       <Stack.Screen
         options={{
-          title: "Building the app...",
-          headerRight: () => <HeaderRightButton />,
-          headerLeft: () => <HeaderLeftButton />,
+          title: "♠️ The Poker Place",
+          headerLargeTitle: true,
         }}
       />
-      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-        <FlatList
-          data={modalDemos}
-          renderItem={({ item }) => <DemoCard item={item} />}
-          keyExtractor={(item) => item.route}
-          contentContainerStyle={styles.listContainer}
-          contentInsetAdjustmentBehavior="automatic"
-          showsVerticalScrollIndicator={false}
-        />
+      <View style={styles.container}>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+          }
+        >
+          {tournaments.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyIcon}>🃏</Text>
+              <Text style={styles.emptyText}>No tournaments scheduled</Text>
+            </View>
+          ) : (
+            tournaments.map((tournament, index) => {
+              const rsvpCount = getRSVPCount(tournament.id);
+              const isUserRSVPd = isRSVPd(tournament.id);
+              const isFull = rsvpCount >= tournament.max_players;
+
+              return (
+                <React.Fragment key={index}>
+                  <TouchableOpacity
+                    key={tournament.id}
+                    style={commonStyles.card}
+                    onPress={() => router.push({
+                      pathname: '/tournament-details',
+                      params: { id: tournament.id }
+                    })}
+                    activeOpacity={0.7}
+                  >
+                    <View style={styles.tournamentHeader}>
+                      <Text style={styles.tournamentName}>{tournament.name}</Text>
+                      {isUserRSVPd && (
+                        <View style={styles.rsvpBadge}>
+                          <Text style={styles.rsvpBadgeText}>✓ RSVP&apos;d</Text>
+                        </View>
+                      )}
+                    </View>
+
+                    <View style={styles.tournamentInfo}>
+                      <View style={styles.infoRow}>
+                        <Text style={styles.infoIcon}>📅</Text>
+                        <Text style={styles.infoText}>{formatDate(tournament.date_time)}</Text>
+                      </View>
+                      <View style={styles.infoRow}>
+                        <Text style={styles.infoIcon}>📍</Text>
+                        <Text style={styles.infoText}>{tournament.location}</Text>
+                      </View>
+                      <View style={styles.infoRow}>
+                        <Text style={styles.infoIcon}>💰</Text>
+                        <Text style={styles.infoText}>Buy-in: {tournament.buy_in}</Text>
+                      </View>
+                      <View style={styles.infoRow}>
+                        <Text style={styles.infoIcon}>👥</Text>
+                        <Text style={styles.infoText}>
+                          {rsvpCount} / {tournament.max_players} players
+                        </Text>
+                      </View>
+                    </View>
+
+                    {user?.status === 'approved' && (
+                      <TouchableOpacity
+                        style={[
+                          styles.rsvpButton,
+                          isUserRSVPd && styles.rsvpButtonActive,
+                          isFull && !isUserRSVPd && styles.rsvpButtonDisabled,
+                        ]}
+                        onPress={(e) => {
+                          e.stopPropagation();
+                          if (!isFull || isUserRSVPd) {
+                            handleRSVP(tournament.id);
+                          }
+                        }}
+                        disabled={isFull && !isUserRSVPd}
+                      >
+                        <Text style={[
+                          styles.rsvpButtonText,
+                          isUserRSVPd && styles.rsvpButtonTextActive,
+                        ]}>
+                          {isFull && !isUserRSVPd ? 'Full' : isUserRSVPd ? 'Cancel RSVP' : 'RSVP'}
+                        </Text>
+                      </TouchableOpacity>
+                    )}
+                  </TouchableOpacity>
+                </React.Fragment>
+              );
+            })
+          )}
+        </ScrollView>
       </View>
     </>
   );
@@ -35,9 +184,87 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: colors.background,
   },
-  listContainer: {
-    paddingVertical: 16,
-    paddingHorizontal: 16,
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: 16,
+    paddingBottom: 40,
+  },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+  },
+  emptyIcon: {
+    fontSize: 60,
+    marginBottom: 16,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: colors.textSecondary,
+  },
+  tournamentHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  tournamentName: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.text,
+    flex: 1,
+  },
+  rsvpBadge: {
+    backgroundColor: colors.success,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  rsvpBadgeText: {
+    color: colors.card,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  tournamentInfo: {
+    marginBottom: 16,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  infoIcon: {
+    fontSize: 16,
+    marginRight: 8,
+    width: 24,
+  },
+  infoText: {
+    fontSize: 14,
+    color: colors.text,
+    flex: 1,
+  },
+  rsvpButton: {
+    backgroundColor: colors.primary,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  rsvpButtonActive: {
+    backgroundColor: colors.textSecondary,
+  },
+  rsvpButtonDisabled: {
+    backgroundColor: colors.border,
+  },
+  rsvpButtonText: {
+    color: colors.card,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  rsvpButtonTextActive: {
+    color: colors.card,
   },
 });

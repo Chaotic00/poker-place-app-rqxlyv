@@ -1,0 +1,218 @@
+
+import React, { useState } from 'react';
+import { View, Text, TextInput, StyleSheet, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform, Alert } from 'react-native';
+import { useRouter } from 'expo-router';
+import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
+import { Tournament } from '@/types';
+import { StorageService } from '@/utils/storage';
+import { useAuth } from '@/contexts/AuthContext';
+import DateTimePicker from '@react-native-community/datetimepicker';
+
+export default function CreateTournamentScreen() {
+  const router = useRouter();
+  const { user } = useAuth();
+  const [name, setName] = useState('');
+  const [dateTime, setDateTime] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [location, setLocation] = useState('');
+  const [buyIn, setBuyIn] = useState('');
+  const [blindStructure, setBlindStructure] = useState('');
+  const [maxPlayers, setMaxPlayers] = useState('');
+  const [error, setError] = useState('');
+
+  const handleCreate = async () => {
+    setError('');
+
+    if (!name || !location || !buyIn || !blindStructure || !maxPlayers) {
+      setError('Please fill in all fields');
+      return;
+    }
+
+    const maxPlayersNum = parseInt(maxPlayers);
+    if (isNaN(maxPlayersNum) || maxPlayersNum < 2) {
+      setError('Max players must be at least 2');
+      return;
+    }
+
+    const newTournament: Tournament = {
+      id: Date.now().toString(),
+      name,
+      date_time: dateTime.toISOString(),
+      location,
+      buy_in: buyIn,
+      blind_structure: blindStructure,
+      max_players: maxPlayersNum,
+      created_by: user?.id || '',
+      created_at: new Date().toISOString(),
+    };
+
+    const tournaments = await StorageService.getTournaments();
+    await StorageService.saveTournaments([...tournaments, newTournament]);
+
+    Alert.alert('Success', 'Tournament created successfully', [
+      {
+        text: 'OK',
+        onPress: () => router.back(),
+      },
+    ]);
+  };
+
+  return (
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.container}
+    >
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.form}>
+          <View style={styles.inputContainer}>
+            <Text style={commonStyles.inputLabel}>Tournament Name *</Text>
+            <TextInput
+              style={commonStyles.input}
+              placeholder="e.g., Friday Night Poker"
+              placeholderTextColor={colors.textSecondary}
+              value={name}
+              onChangeText={setName}
+            />
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={commonStyles.inputLabel}>Date & Time *</Text>
+            <TouchableOpacity
+              style={[commonStyles.input, styles.dateButton]}
+              onPress={() => setShowDatePicker(true)}
+            >
+              <Text style={styles.dateText}>
+                {dateTime.toLocaleDateString('en-US', {
+                  weekday: 'short',
+                  month: 'short',
+                  day: 'numeric',
+                  year: 'numeric',
+                  hour: 'numeric',
+                  minute: '2-digit',
+                })}
+              </Text>
+            </TouchableOpacity>
+            {showDatePicker && (
+              <DateTimePicker
+                value={dateTime}
+                mode="datetime"
+                display="default"
+                onChange={(event, selectedDate) => {
+                  setShowDatePicker(false);
+                  if (selectedDate) {
+                    setDateTime(selectedDate);
+                  }
+                }}
+              />
+            )}
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={commonStyles.inputLabel}>Location *</Text>
+            <TextInput
+              style={commonStyles.input}
+              placeholder="e.g., Downtown Poker Club"
+              placeholderTextColor={colors.textSecondary}
+              value={location}
+              onChangeText={setLocation}
+            />
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={commonStyles.inputLabel}>Buy-in *</Text>
+            <TextInput
+              style={commonStyles.input}
+              placeholder="e.g., $50"
+              placeholderTextColor={colors.textSecondary}
+              value={buyIn}
+              onChangeText={setBuyIn}
+            />
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={commonStyles.inputLabel}>Blind Structure *</Text>
+            <TextInput
+              style={[commonStyles.input, styles.textArea]}
+              placeholder="e.g., 25/50, 50/100, 100/200"
+              placeholderTextColor={colors.textSecondary}
+              value={blindStructure}
+              onChangeText={setBlindStructure}
+              multiline
+              numberOfLines={4}
+            />
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={commonStyles.inputLabel}>Max Players *</Text>
+            <TextInput
+              style={commonStyles.input}
+              placeholder="e.g., 10"
+              placeholderTextColor={colors.textSecondary}
+              value={maxPlayers}
+              onChangeText={setMaxPlayers}
+              keyboardType="number-pad"
+            />
+          </View>
+
+          {error ? <Text style={commonStyles.errorText}>{error}</Text> : null}
+
+          <TouchableOpacity
+            style={[buttonStyles.primary, styles.createButton]}
+            onPress={handleCreate}
+          >
+            <Text style={buttonStyles.text}>Create Tournament</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[buttonStyles.outline, styles.cancelButton]}
+            onPress={() => router.back()}
+          >
+            <Text style={buttonStyles.outlineText}>Cancel</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: 20,
+    paddingBottom: 40,
+  },
+  form: {
+    width: '100%',
+  },
+  inputContainer: {
+    marginBottom: 8,
+  },
+  dateButton: {
+    justifyContent: 'center',
+  },
+  dateText: {
+    fontSize: 16,
+    color: colors.text,
+  },
+  textArea: {
+    height: 100,
+    textAlignVertical: 'top',
+    paddingTop: 12,
+  },
+  createButton: {
+    marginTop: 8,
+  },
+  cancelButton: {
+    marginTop: 12,
+  },
+});
