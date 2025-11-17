@@ -105,7 +105,10 @@ export default function HomeScreen() {
           style={styles.scrollView}
           contentContainerStyle={[
             styles.scrollContent,
-            { paddingBottom: insets.bottom + 100 }
+            { 
+              paddingTop: Math.max(insets.top, 16),
+              paddingBottom: insets.bottom + 100 
+            }
           ]}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
@@ -198,8 +201,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: 16,
-    paddingTop: 16,
+    paddingHorizontal: 16,
   },
   emptyState: {
     alignItems: 'center',
