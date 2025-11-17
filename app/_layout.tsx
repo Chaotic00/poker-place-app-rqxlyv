@@ -61,14 +61,19 @@ function RootLayoutNav() {
     // If user is not authenticated and trying to access protected routes
     if (!user && (inAuthGroup || onAdminScreen || onTournamentDetails)) {
       console.log('❌ Redirecting to welcome - user not authenticated');
-      router.replace('/welcome');
+      // Use setTimeout to avoid navigation conflicts
+      setTimeout(() => {
+        router.replace('/welcome');
+      }, 0);
       return;
     }
 
     // If user is authenticated and on auth screens, redirect to home
     if (user && onAuthScreen) {
       console.log('✅ Redirecting to home - user authenticated on auth screen');
-      router.replace('/(tabs)/(home)');
+      setTimeout(() => {
+        router.replace('/(tabs)/(home)');
+      }, 0);
       return;
     }
 

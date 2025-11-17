@@ -11,6 +11,7 @@ export default function ProfileScreen() {
   const { user, logout, refreshUser } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [nickname, setNickname] = useState(user?.nickname || '');
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleSaveNickname = async () => {
     if (!user) return;
@@ -36,7 +37,13 @@ export default function ProfileScreen() {
           style: 'destructive',
           onPress: async () => {
             console.log('=== USER CONFIRMED LOGOUT ===');
-            await logout();
+            setIsLoggingOut(true);
+            try {
+              await logout();
+            } catch (error) {
+              console.log('Logout error in profile:', error);
+              setIsLoggingOut(false);
+            }
           },
         },
       ]
@@ -164,10 +171,18 @@ export default function ProfileScreen() {
         )}
 
         <TouchableOpacity
-          style={[buttonStyles.outline, styles.logoutButton, { borderColor: colors.error }]}
+          style={[
+            buttonStyles.outline, 
+            styles.logoutButton, 
+            { borderColor: colors.error },
+            isLoggingOut && styles.logoutButtonDisabled
+          ]}
           onPress={handleLogout}
+          disabled={isLoggingOut}
         >
-          <Text style={[buttonStyles.outlineText, { color: colors.error }]}>Logout</Text>
+          <Text style={[buttonStyles.outlineText, { color: colors.error }]}>
+            {isLoggingOut ? 'Logging out...' : 'Logout'}
+          </Text>
         </TouchableOpacity>
       </ScrollView>
     </View>
@@ -275,5 +290,8 @@ const styles = StyleSheet.create({
   },
   logoutButton: {
     marginTop: 16,
+  },
+  logoutButtonDisabled: {
+    opacity: 0.5,
   },
 });
