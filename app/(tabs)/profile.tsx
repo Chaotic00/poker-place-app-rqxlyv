@@ -35,8 +35,10 @@ export default function ProfileScreen() {
           text: 'Logout',
           style: 'destructive',
           onPress: async () => {
+            console.log('User confirmed logout');
             await logout();
-            router.replace('/welcome');
+            console.log('Redirecting to login page');
+            router.replace('/login');
           },
         },
       ]

@@ -19,12 +19,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadUser();
+    initializeApp();
   }, []);
+
+  const initializeApp = async () => {
+    try {
+      // Initialize default data (demo users and tournaments)
+      await StorageService.initializeDefaultData();
+      console.log('Default data initialized');
+      
+      // Load current user
+      await loadUser();
+    } catch (error) {
+      console.log('Error initializing app:', error);
+      setLoading(false);
+    }
+  };
 
   const loadUser = async () => {
     try {
       const currentUser = await StorageService.getCurrentUser();
+      console.log('Loaded user:', currentUser?.email);
       setUser(currentUser);
     } catch (error) {
       console.log('Error loading user:', error);
@@ -35,21 +50,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     try {
+      console.log('Login attempt for:', email);
       const users = await StorageService.getUsers();
+      console.log('Total users in storage:', users.length);
+      
       const foundUser = users.find(u => u.email.toLowerCase() === email.toLowerCase());
 
       if (!foundUser) {
+        console.log('User not found');
+        return { success: false, error: 'Invalid email or password' };
+      }
+
+      console.log('User found:', foundUser.email, 'Status:', foundUser.status);
+
+      // Check password
+      if (foundUser.password !== password) {
+        console.log('Invalid password');
         return { success: false, error: 'Invalid email or password' };
       }
 
       if (foundUser.status === 'pending') {
+        console.log('Account pending approval');
         return { success: false, error: 'Your account is pending approval.' };
       }
 
       if (foundUser.status === 'rejected') {
+        console.log('Account rejected');
         return { success: false, error: 'Your account has been rejected.' };
       }
 
+      console.log('Login successful');
       await StorageService.setCurrentUser(foundUser);
       setUser(foundUser);
       return { success: true };
@@ -61,14 +91,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     try {
+      console.log('Logging out user');
       await StorageService.clearCurrentUser();
       setUser(null);
+      console.log('Logout successful');
     } catch (error) {
       console.log('Logout error:', error);
     }
   };
 
-  const register = async (userData: Omit<User, 'id' | 'status'> & { password: string }): Promise<{ success: boolean; error?: string }> => {
+  const register = async (userData: Omit<User, 'id' | 'status' | 'created_at'> & { password: string }): Promise<{ success: boolean; error?: string }> => {
     try {
       const users = await StorageService.getUsers();
       
@@ -83,10 +115,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email: userData.email,
         phone: userData.phone,
         nickname: userData.nickname,
+        password: userData.password,
         status: 'pending',
+        created_at: new Date().toISOString(),
       };
 
       await StorageService.saveUsers([...users, newUser]);
+      console.log('User registered:', newUser.email);
       return { success: true };
     } catch (error) {
       console.log('Registration error:', error);

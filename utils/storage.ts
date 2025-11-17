@@ -21,6 +21,7 @@ export const StorageService = {
   async saveUsers(users: User[]): Promise<void> {
     try {
       await AsyncStorage.setItem(USERS_KEY, JSON.stringify(users));
+      console.log('Users saved:', users.length);
     } catch (error) {
       console.log('Error saving users:', error);
     }
@@ -76,11 +77,22 @@ export const StorageService = {
     try {
       if (user) {
         await AsyncStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+        console.log('Current user set:', user.email);
       } else {
         await AsyncStorage.removeItem(CURRENT_USER_KEY);
+        console.log('Current user cleared');
       }
     } catch (error) {
       console.log('Error setting current user:', error);
+    }
+  },
+
+  async clearCurrentUser(): Promise<void> {
+    try {
+      await AsyncStorage.removeItem(CURRENT_USER_KEY);
+      console.log('Current user cleared');
+    } catch (error) {
+      console.log('Error clearing current user:', error);
     }
   },
 
@@ -110,6 +122,7 @@ export const StorageService = {
         },
       ];
       await this.saveUsers(defaultUsers);
+      console.log('Default users created');
     }
 
     const tournaments = await this.getTournaments();
@@ -147,6 +160,7 @@ export const StorageService = {
         },
       ];
       await this.saveTournaments(defaultTournaments);
+      console.log('Default tournaments created');
     }
   },
 };
