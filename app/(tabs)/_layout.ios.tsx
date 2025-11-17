@@ -2,16 +2,21 @@
 import React, { useEffect } from 'react';
 import { NativeTabs, Icon, Label } from 'expo-router/unstable-native-tabs';
 import { useAuth } from '@/contexts/AuthContext';
-import { useRouter } from 'expo-router';
+import { useRouter, useSegments } from 'expo-router';
 import { View, ActivityIndicator } from 'react-native';
 import { colors } from '@/styles/commonStyles';
 
 export default function TabLayout() {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const segments = useSegments();
 
   useEffect(() => {
+    console.log('iOS Tab Layout - User:', user?.email, 'Loading:', loading);
+    console.log('iOS Tab Layout - Current segments:', segments);
+    
     if (!loading && !user) {
+      console.log('iOS Tab Layout - No user, redirecting to welcome');
       router.replace('/welcome');
     }
   }, [user, loading, router]);

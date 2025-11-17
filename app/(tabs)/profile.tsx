@@ -35,18 +35,8 @@ export default function ProfileScreen() {
           text: 'Logout',
           style: 'destructive',
           onPress: async () => {
-            try {
-              console.log('=== USER CONFIRMED LOGOUT ===');
-              console.log('Calling logout function...');
-              
-              // Call logout - it now handles navigation internally
-              await logout();
-              
-              console.log('Logout process initiated');
-            } catch (error) {
-              console.log('Error during logout process:', error);
-              // Logout function has fallback navigation
-            }
+            console.log('=== USER CONFIRMED LOGOUT ===');
+            await logout();
           },
         },
       ]
@@ -148,23 +138,26 @@ export default function ProfileScreen() {
           <View style={commonStyles.card}>
             <View style={styles.profileSection}>
               <Text style={styles.sectionTitle}>Admin Actions</Text>
+              <Text style={styles.adminDescription}>
+                Access admin portal to manage users and tournaments
+              </Text>
               <TouchableOpacity
                 style={[buttonStyles.secondary, styles.adminButton]}
                 onPress={() => router.push('/admin/user-approvals')}
               >
-                <Text style={buttonStyles.text}>User Approvals</Text>
+                <Text style={buttonStyles.text}>👥 User Approvals</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[buttonStyles.secondary, styles.adminButton]}
                 onPress={() => router.push('/admin/tournament-management')}
               >
-                <Text style={buttonStyles.text}>Tournament Management</Text>
+                <Text style={buttonStyles.text}>🎯 Tournament Management</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[buttonStyles.secondary, styles.adminButton]}
                 onPress={() => router.push('/admin/rsvp-viewer')}
               >
-                <Text style={buttonStyles.text}>RSVP Viewer</Text>
+                <Text style={buttonStyles.text}>📋 RSVP Viewer</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -219,6 +212,12 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.text,
     marginBottom: 16,
+  },
+  adminDescription: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    marginBottom: 16,
+    lineHeight: 20,
   },
   infoRow: {
     flexDirection: 'row',

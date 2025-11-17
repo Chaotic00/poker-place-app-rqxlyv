@@ -1,6 +1,6 @@
 
 import "react-native-reanimated";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useFonts } from "expo-font";
 import { Stack, router, useSegments, useRootNavigationState } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
@@ -24,12 +24,20 @@ function RootLayoutNav() {
   const { user, loading } = useAuth();
   const segments = useSegments();
   const navigationState = useRootNavigationState();
+  const [isNavigationReady, setIsNavigationReady] = useState(false);
+
+  // Track when navigation is ready
+  useEffect(() => {
+    if (navigationState?.key) {
+      setIsNavigationReady(true);
+    }
+  }, [navigationState]);
 
   useEffect(() => {
     // Don't do anything while navigation is not ready or auth is loading
-    if (!navigationState?.key || loading) {
+    if (!isNavigationReady || loading) {
       console.log('Navigation guard: Waiting...', { 
-        navigationReady: !!navigationState?.key, 
+        navigationReady: isNavigationReady, 
         authLoading: loading 
       });
       return;
@@ -44,6 +52,7 @@ function RootLayoutNav() {
     console.log('=== NAVIGATION GUARD CHECK ===');
     console.log('Current path:', currentPath);
     console.log('User authenticated:', !!user);
+    console.log('User status:', user?.status);
     console.log('In auth group (tabs):', inAuthGroup);
     console.log('On auth screen:', onAuthScreen);
     console.log('On admin screen:', onAdminScreen);
@@ -64,7 +73,7 @@ function RootLayoutNav() {
     }
 
     console.log('✓ Navigation guard passed');
-  }, [user, segments, navigationState, loading]);
+  }, [user, segments, isNavigationReady, loading]);
 
   return (
     <Stack>
