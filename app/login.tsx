@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Alert, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
 import { useAuth } from '@/contexts/AuthContext';
@@ -50,8 +50,11 @@ export default function LoginScreen() {
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
           >
-            <Text style={styles.headerIcon}>♠️</Text>
-            <Text style={styles.headerTitle}>The Poker Place</Text>
+            <Image
+              source={require('@/assets/images/fd7338a8-fef1-4474-876e-ff41e60fa21d.png')}
+              style={styles.logo}
+              resizeMode="contain"
+            />
             <Text style={styles.headerSubtitle}>Welcome Back</Text>
           </LinearGradient>
         </View>
@@ -145,16 +148,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     alignItems: 'center',
   },
-  headerIcon: {
-    fontSize: 70,
+  logo: {
+    width: 240,
+    height: 140,
     marginBottom: 16,
-  },
-  headerTitle: {
-    fontSize: 32,
-    fontWeight: '800',
-    color: colors.card,
-    marginBottom: 8,
-    textAlign: 'center',
   },
   headerSubtitle: {
     fontSize: 18,

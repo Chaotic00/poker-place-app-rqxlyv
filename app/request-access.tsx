@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Alert, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
 import { useAuth } from '@/contexts/AuthContext';
@@ -65,8 +65,12 @@ export default function RequestAccessScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.header}>
-          <Text style={styles.headerIcon}>♠️</Text>
-          <Text style={commonStyles.title}>Request Access</Text>
+          <Image
+            source={require('@/assets/images/fd7338a8-fef1-4474-876e-ff41e60fa21d.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+          <Text style={styles.headerTitle}>Request Access</Text>
           <Text style={commonStyles.textSecondary}>Join our poker community</Text>
         </View>
 
@@ -172,9 +176,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 32,
   },
-  headerIcon: {
-    fontSize: 60,
+  logo: {
+    width: 240,
+    height: 140,
     marginBottom: 16,
+  },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 8,
+    textAlign: 'center',
   },
   form: {
     width: '100%',

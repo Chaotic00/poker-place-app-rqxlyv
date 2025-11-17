@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { colors, buttonStyles } from '@/styles/commonStyles';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -17,8 +17,11 @@ export default function WelcomeScreen() {
     >
       <View style={styles.content}>
         <View style={styles.logoContainer}>
-          <Text style={styles.logoIcon}>♠️</Text>
-          <Text style={styles.title}>The Poker Place</Text>
+          <Image
+            source={require('@/assets/images/fd7338a8-fef1-4474-876e-ff41e60fa21d.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
           <Text style={styles.subtitle}>Private Poker Community</Text>
         </View>
 
@@ -62,16 +65,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 40,
   },
-  logoIcon: {
-    fontSize: 80,
+  logo: {
+    width: 280,
+    height: 160,
     marginBottom: 20,
-  },
-  title: {
-    fontSize: 36,
-    fontWeight: '800',
-    color: colors.card,
-    marginBottom: 8,
-    textAlign: 'center',
   },
   subtitle: {
     fontSize: 18,
