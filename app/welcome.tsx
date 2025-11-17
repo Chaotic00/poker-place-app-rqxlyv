@@ -19,7 +19,7 @@ export default function WelcomeScreen() {
       <View style={styles.content}>
         <View style={styles.logoContainer}>
           <TextLogo size="large" color={colors.card} />
-          <Text style={styles.subtitle}>Private Poker Club</Text>
+          <Text style={styles.subtitle}>Private Poker Community</Text>
         </View>
 
         <View style={styles.buttonContainer}>
@@ -39,7 +39,7 @@ export default function WelcomeScreen() {
         </View>
 
         <Text style={styles.footer}>
-          Private poker club — access by approval only
+          Private poker community — access by approval only
         </Text>
       </View>
     </LinearGradient>
