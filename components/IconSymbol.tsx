@@ -1,3 +1,4 @@
+
 // This file is a fallback for using MaterialIcons on Android and web.
 
 import React from "react";
@@ -15,7 +16,7 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
  *
  * Icon `name`s are based on SFSymbols and require manual mapping to MaterialIcons.
  */
-export function IconSymbol({
+export default function IconSymbol({
   ios_icon_name = undefined,
   android_material_icon_name,
   size = 24,
@@ -38,3 +39,6 @@ export function IconSymbol({
     />
   );
 }
+
+// Also export as named export for backwards compatibility
+export { IconSymbol };

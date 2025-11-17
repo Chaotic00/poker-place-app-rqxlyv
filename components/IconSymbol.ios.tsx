@@ -1,7 +1,8 @@
+
 import { SymbolView, SymbolViewProps, SymbolWeight } from "expo-symbols";
 import { StyleProp, ViewStyle } from "react-native";
 
-export function IconSymbol({
+export default function IconSymbol({
   ios_icon_name,
   android_material_icon_name,
   size = 24,
@@ -32,3 +33,6 @@ export function IconSymbol({
     />
   );
 }
+
+// Also export as named export for backwards compatibility
+export { IconSymbol };
