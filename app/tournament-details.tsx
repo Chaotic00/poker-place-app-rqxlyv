@@ -7,6 +7,8 @@ import { Tournament, RSVP, User } from '@/types';
 import { StorageService } from '@/utils/storage';
 import { useAuth } from '@/contexts/AuthContext';
 
+type TabType = 'main' | 'blinds';
+
 export default function TournamentDetailsScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
@@ -14,6 +16,7 @@ export default function TournamentDetailsScreen() {
   const [tournament, setTournament] = useState<Tournament | null>(null);
   const [rsvps, setRsvps] = useState<RSVP[]>([]);
   const [rsvpUsers, setRsvpUsers] = useState<User[]>([]);
+  const [activeTab, setActiveTab] = useState<TabType>('main');
 
   useEffect(() => {
     loadData();
@@ -63,8 +66,8 @@ export default function TournamentDetailsScreen() {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
-      weekday: 'long',
-      month: 'long',
+      weekday: 'short',
+      month: 'short',
       day: 'numeric',
       year: 'numeric',
       hour: 'numeric',
@@ -80,96 +83,180 @@ export default function TournamentDetailsScreen() {
     );
   }
 
-  return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <View style={styles.header}>
-        <Text style={styles.title}>{tournament.name}</Text>
-      </View>
-
-      <View style={commonStyles.card}>
-        <View style={styles.detailRow}>
-          <Text style={styles.detailIcon}>📅</Text>
-          <View style={styles.detailContent}>
-            <Text style={styles.detailLabel}>Date & Time</Text>
-            <Text style={styles.detailValue}>{formatDate(tournament.date_time)}</Text>
-          </View>
-        </View>
-
-        <View style={styles.detailRow}>
-          <Text style={styles.detailIcon}>📍</Text>
-          <View style={styles.detailContent}>
-            <Text style={styles.detailLabel}>Location</Text>
-            <Text style={styles.detailValue}>{tournament.location}</Text>
-          </View>
-        </View>
-
-        <View style={styles.detailRow}>
-          <Text style={styles.detailIcon}>💰</Text>
-          <View style={styles.detailContent}>
-            <Text style={styles.detailLabel}>Buy-in</Text>
-            <Text style={styles.detailValue}>{tournament.buy_in}</Text>
-          </View>
-        </View>
-
-        <View style={styles.detailRow}>
-          <Text style={styles.detailIcon}>👥</Text>
-          <View style={styles.detailContent}>
-            <Text style={styles.detailLabel}>Players</Text>
-            <Text style={styles.detailValue}>
-              {rsvps.length} / {tournament.max_players}
-            </Text>
-          </View>
+  const renderInfoGrid = () => (
+    <View style={styles.infoGrid}>
+      <View style={styles.infoRow}>
+        <View style={styles.infoCell}>
+          <Text style={styles.infoLabel}>Event Name</Text>
+          <Text style={styles.infoValue}>{tournament.name}</Text>
         </View>
       </View>
 
-      <View style={commonStyles.card}>
-        <Text style={styles.sectionTitle}>Blind Structure</Text>
-        <Text style={styles.blindStructure}>{tournament.blind_structure}</Text>
+      <View style={styles.infoRow}>
+        <View style={styles.infoCell}>
+          <Text style={styles.infoLabel}>Game Type</Text>
+          <Text style={styles.infoValue}>{tournament.game_type || 'Hold\'em'}</Text>
+        </View>
       </View>
 
-      <View style={commonStyles.card}>
-        <Text style={styles.sectionTitle}>Players RSVP&apos;d ({rsvpUsers.length})</Text>
-        {rsvpUsers.length === 0 ? (
-          <Text style={styles.emptyText}>No players have RSVP&apos;d yet</Text>
-        ) : (
-          rsvpUsers.map((rsvpUser, index) => (
+      <View style={styles.infoRow}>
+        <View style={styles.infoCell}>
+          <Text style={styles.infoLabel}>Date & Time</Text>
+          <Text style={styles.infoValue}>{formatDate(tournament.date_time)}</Text>
+        </View>
+      </View>
+
+      <View style={styles.infoRow}>
+        <View style={styles.infoCell}>
+          <Text style={styles.infoLabel}>Late Registration</Text>
+          <Text style={styles.infoValue}>{tournament.late_registration || 'End of Level 3'}</Text>
+        </View>
+      </View>
+
+      <View style={styles.infoRow}>
+        <View style={styles.infoCell}>
+          <Text style={styles.infoLabel}>Buy-In</Text>
+          <Text style={styles.infoValue}>{tournament.buy_in}</Text>
+        </View>
+      </View>
+
+      <View style={styles.infoRow}>
+        <View style={styles.infoCell}>
+          <Text style={styles.infoLabel}>Starting Chips</Text>
+          <Text style={styles.infoValue}>{tournament.starting_chips || '10,000'}</Text>
+        </View>
+      </View>
+
+      <View style={styles.infoRow}>
+        <View style={styles.infoCell}>
+          <Text style={styles.infoLabel}>Add On</Text>
+          <Text style={styles.infoValue}>{tournament.add_on || 'None'}</Text>
+        </View>
+      </View>
+    </View>
+  );
+
+  const renderBlindStructure = () => {
+    const blindLevels = tournament.blind_structure.split(',').map(level => level.trim());
+    
+    return (
+      <View style={styles.blindsContainer}>
+        <View style={styles.blindsHeader}>
+          <Text style={[styles.blindsHeaderText, { flex: 1 }]}>LEVEL</Text>
+          <Text style={[styles.blindsHeaderText, { flex: 1 }]}>Ante</Text>
+          <Text style={[styles.blindsHeaderText, { flex: 1 }]}>SB</Text>
+          <Text style={[styles.blindsHeaderText, { flex: 1 }]}>BB</Text>
+        </View>
+        {blindLevels.map((level, index) => {
+          const parts = level.split('/');
+          const sb = parts[0] || '-';
+          const bb = parts[1] || '-';
+          
+          return (
             <React.Fragment key={index}>
-              <View key={rsvpUser.id} style={styles.playerRow}>
-                <Text style={styles.playerIcon}>👤</Text>
-                <View style={styles.playerInfo}>
-                  <Text style={styles.playerName}>{rsvpUser.full_name}</Text>
-                  <Text style={styles.playerNickname}>@{rsvpUser.nickname}</Text>
-                </View>
+              <View style={[styles.blindsRow, index % 2 === 0 && styles.blindsRowAlt]}>
+                <Text style={[styles.blindsCell, { flex: 1 }]}>Lv.{index + 1}</Text>
+                <Text style={[styles.blindsCell, { flex: 1 }]}>-</Text>
+                <Text style={[styles.blindsCell, { flex: 1 }]}>{sb}</Text>
+                <Text style={[styles.blindsCell, { flex: 1 }]}>{bb}</Text>
               </View>
             </React.Fragment>
-          ))
+          );
+        })}
+      </View>
+    );
+  };
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.headerSection}>
+        <TouchableOpacity 
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
+          <Text style={styles.backButtonText}>←</Text>
+        </TouchableOpacity>
+        <Text style={styles.title} numberOfLines={1}>{tournament.name}</Text>
+      </View>
+
+      <View style={styles.registerSection}>
+        <View style={styles.registerInfo}>
+          <Text style={styles.registerLabel}>Start</Text>
+          <Text style={styles.registerValue}>{formatDate(tournament.date_time)}</Text>
+          
+          <Text style={[styles.registerLabel, { marginTop: 8 }]}>Late Reg.</Text>
+          <Text style={styles.registerValue}>{tournament.late_registration || 'End of Level 3'}</Text>
+          
+          <Text style={[styles.registerLabel, { marginTop: 8 }]}>Buy-In</Text>
+          <Text style={styles.registerValue}>{tournament.buy_in}</Text>
+        </View>
+
+        {user?.status === 'approved' && (
+          <TouchableOpacity
+            style={[
+              styles.registerButton,
+              isRSVPd && styles.registeredButton,
+              isFull && !isRSVPd && styles.disabledButton,
+            ]}
+            onPress={handleRSVP}
+            disabled={isFull && !isRSVPd}
+          >
+            <Text style={styles.registerButtonText}>
+              {isFull && !isRSVPd ? 'Full' : isRSVPd ? 'Registered' : 'Register'}
+            </Text>
+          </TouchableOpacity>
         )}
       </View>
 
-      {user?.status === 'approved' && (
+      <View style={styles.tabsContainer}>
         <TouchableOpacity
-          style={[
-            buttonStyles.primary,
-            styles.actionButton,
-            isRSVPd && styles.cancelButton,
-            isFull && !isRSVPd && styles.disabledButton,
-          ]}
-          onPress={handleRSVP}
-          disabled={isFull && !isRSVPd}
+          style={[styles.tab, activeTab === 'main' && styles.activeTab]}
+          onPress={() => setActiveTab('main')}
         >
-          <Text style={buttonStyles.text}>
-            {isFull && !isRSVPd ? 'Tournament Full' : isRSVPd ? 'Cancel RSVP' : 'RSVP to Tournament'}
+          <Text style={[styles.tabText, activeTab === 'main' && styles.activeTabText]}>
+            Main
           </Text>
         </TouchableOpacity>
-      )}
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'blinds' && styles.activeTab]}
+          onPress={() => setActiveTab('blinds')}
+        >
+          <Text style={[styles.tabText, activeTab === 'blinds' && styles.activeTabText]}>
+            Blinds
+          </Text>
+        </TouchableOpacity>
+      </View>
 
-      <TouchableOpacity
-        style={[buttonStyles.outline, styles.actionButton]}
-        onPress={() => router.back()}
+      <ScrollView 
+        style={styles.contentScroll}
+        contentContainerStyle={styles.scrollContent}
       >
-        <Text style={buttonStyles.outlineText}>Close</Text>
-      </TouchableOpacity>
-    </ScrollView>
+        {activeTab === 'main' ? renderInfoGrid() : renderBlindStructure()}
+
+        {activeTab === 'main' && (
+          <View style={styles.playersSection}>
+            <Text style={styles.sectionTitle}>
+              Players RSVP&apos;d ({rsvpUsers.length})
+            </Text>
+            {rsvpUsers.length === 0 ? (
+              <Text style={styles.emptyText}>No players have RSVP&apos;d yet</Text>
+            ) : (
+              rsvpUsers.map((rsvpUser, index) => (
+                <React.Fragment key={index}>
+                  <View style={styles.playerRow}>
+                    <Text style={styles.playerIcon}>👤</Text>
+                    <View style={styles.playerInfo}>
+                      <Text style={styles.playerName}>{rsvpUser.full_name}</Text>
+                      <Text style={styles.playerNickname}>@{rsvpUser.nickname}</Text>
+                    </View>
+                  </View>
+                </React.Fragment>
+              ))
+            )}
+          </View>
+        )}
+      </ScrollView>
+    </View>
   );
 }
 
@@ -178,64 +265,182 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  content: {
-    padding: 20,
-    paddingBottom: 40,
+  headerSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingTop: 60,
+    paddingBottom: 16,
+    backgroundColor: colors.background,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
-  header: {
-    marginBottom: 20,
+  backButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
+  },
+  backButtonText: {
+    fontSize: 28,
+    color: colors.text,
+    fontWeight: '600',
   },
   title: {
-    fontSize: 28,
-    fontWeight: '800',
+    flex: 1,
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  registerSection: {
+    flexDirection: 'row',
+    padding: 16,
+    backgroundColor: colors.background,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    alignItems: 'center',
+  },
+  registerInfo: {
+    flex: 1,
+  },
+  registerLabel: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    fontWeight: '500',
+  },
+  registerValue: {
+    fontSize: 14,
+    color: colors.text,
+    fontWeight: '600',
+    marginTop: 2,
+  },
+  registerButton: {
+    backgroundColor: '#4CAF50',
+    paddingHorizontal: 32,
+    paddingVertical: 16,
+    borderRadius: 8,
+    minWidth: 120,
+    alignItems: 'center',
+  },
+  registeredButton: {
+    backgroundColor: '#4CAF50',
+  },
+  disabledButton: {
+    backgroundColor: colors.border,
+  },
+  registerButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  tabsContainer: {
+    flexDirection: 'row',
+    backgroundColor: colors.background,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 16,
+    alignItems: 'center',
+    borderBottomWidth: 3,
+    borderBottomColor: 'transparent',
+  },
+  activeTab: {
+    borderBottomColor: colors.primary,
+  },
+  tabText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.textSecondary,
+  },
+  activeTabText: {
+    color: colors.text,
+  },
+  contentScroll: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 100,
+  },
+  infoGrid: {
+    backgroundColor: colors.background,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  infoCell: {
+    flex: 1,
+    padding: 16,
+  },
+  infoLabel: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    fontWeight: '500',
+    marginBottom: 4,
+  },
+  infoValue: {
+    fontSize: 16,
+    color: colors.text,
+    fontWeight: '600',
+  },
+  blindsContainer: {
+    backgroundColor: colors.background,
+  },
+  blindsHeader: {
+    flexDirection: 'row',
+    backgroundColor: colors.border,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  blindsHeaderText: {
+    fontSize: 14,
+    fontWeight: '700',
     color: colors.text,
     textAlign: 'center',
   },
-  detailRow: {
+  blindsRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
-  detailIcon: {
-    fontSize: 24,
-    marginRight: 12,
-    width: 32,
+  blindsRowAlt: {
+    backgroundColor: colors.cardBackground || '#F5F5F5',
   },
-  detailContent: {
-    flex: 1,
-  },
-  detailLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: colors.textSecondary,
-    textTransform: 'uppercase',
-    marginBottom: 4,
-  },
-  detailValue: {
-    fontSize: 16,
+  blindsCell: {
+    fontSize: 14,
     color: colors.text,
+    textAlign: 'center',
     fontWeight: '500',
+  },
+  playersSection: {
+    padding: 16,
+    backgroundColor: colors.background,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '700',
     color: colors.text,
-    marginBottom: 12,
-  },
-  blindStructure: {
-    fontSize: 14,
-    color: colors.text,
-    lineHeight: 22,
+    marginBottom: 16,
   },
   emptyText: {
     fontSize: 14,
     color: colors.textSecondary,
     fontStyle: 'italic',
+    textAlign: 'center',
+    paddingVertical: 20,
   },
   playerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
@@ -254,14 +459,6 @@ const styles = StyleSheet.create({
   playerNickname: {
     fontSize: 14,
     color: colors.textSecondary,
-  },
-  actionButton: {
-    marginTop: 16,
-  },
-  cancelButton: {
-    backgroundColor: colors.textSecondary,
-  },
-  disabledButton: {
-    backgroundColor: colors.border,
+    marginTop: 2,
   },
 });

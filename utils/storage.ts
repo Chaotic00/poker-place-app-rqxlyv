@@ -125,6 +125,10 @@ export const StorageService = {
           max_players: 10,
           created_by: '1',
           created_at: new Date().toISOString(),
+          game_type: 'Hold\'em',
+          late_registration: 'End of Level 3',
+          starting_chips: '10,000',
+          add_on: 'None',
         },
         {
           id: '2',
@@ -136,6 +140,10 @@ export const StorageService = {
           max_players: 20,
           created_by: '1',
           created_at: new Date().toISOString(),
+          game_type: 'Hold\'em',
+          late_registration: 'End of Level 5',
+          starting_chips: '20,000',
+          add_on: '$50 for 10,000 chips',
         },
       ];
       await this.saveTournaments(defaultTournaments);

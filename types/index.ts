@@ -22,6 +22,10 @@ export interface Tournament {
   max_players: number;
   created_by: string;
   created_at: string;
+  game_type?: string;
+  late_registration?: string;
+  starting_chips?: string;
+  add_on?: string;
 }
 
 export interface RSVP {
