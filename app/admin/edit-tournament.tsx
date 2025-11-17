@@ -40,6 +40,23 @@ export default function EditTournamentScreen() {
     }
   };
 
+  const processLevelTimes = (levelTimesInput: string, blindStructureInput: string): string => {
+    if (!levelTimesInput.trim()) {
+      return '';
+    }
+
+    const timesArray = levelTimesInput.split(',').map(time => time.trim()).filter(time => time);
+    const blindLevels = blindStructureInput.split(',').map(level => level.trim()).filter(level => level);
+    
+    // If only one time is entered, apply it to all levels
+    if (timesArray.length === 1 && blindLevels.length > 1) {
+      const singleTime = timesArray[0];
+      return Array(blindLevels.length).fill(singleTime).join(', ');
+    }
+    
+    return levelTimesInput;
+  };
+
   const handleSave = async () => {
     setError('');
 
@@ -56,6 +73,8 @@ export default function EditTournamentScreen() {
 
     if (!tournament) return;
 
+    const processedLevelTimes = processLevelTimes(levelTimes, blindStructure);
+
     const updatedTournament: Tournament = {
       ...tournament,
       name,
@@ -63,7 +82,7 @@ export default function EditTournamentScreen() {
       location,
       buy_in: buyIn,
       blind_structure: blindStructure,
-      level_times: levelTimes,
+      level_times: processedLevelTimes,
       max_players: maxPlayersNum,
     };
 
@@ -182,11 +201,12 @@ export default function EditTournamentScreen() {
           <View style={styles.inputContainer}>
             <Text style={commonStyles.inputLabel}>Level Times</Text>
             <Text style={styles.helperText}>
-              Enter time for each level in minutes, separated by commas (e.g., 30, 30, 45)
+              Enter time for each level in minutes, separated by commas (e.g., 30, 30, 45).{'\n'}
+              Tip: Enter a single time (e.g., 30) to apply it to all levels.
             </Text>
             <TextInput
               style={[commonStyles.input, styles.textArea]}
-              placeholder="e.g., 30, 30, 45, 45, 60"
+              placeholder="e.g., 30, 30, 45, 45, 60 or just 30"
               placeholderTextColor={colors.textSecondary}
               value={levelTimes}
               onChangeText={setLevelTimes}
