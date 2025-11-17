@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '@/types';
 import { StorageService } from '@/utils/storage';
+import { router } from 'expo-router';
 
 interface AuthContextType {
   user: User | null;
@@ -92,18 +93,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     try {
       console.log('=== LOGOUT STARTED ===');
-      console.log('Step 1: Clearing AsyncStorage');
-      await StorageService.clearCurrentUser();
-      console.log('Step 2: AsyncStorage cleared successfully');
-      console.log('Step 3: Setting user state to null');
+      
+      // Step 1: Clear user state immediately
+      console.log('Step 1: Setting user state to null');
       setUser(null);
-      console.log('Step 4: User state set to null');
+      
+      // Step 2: Clear AsyncStorage
+      console.log('Step 2: Clearing AsyncStorage');
+      await StorageService.clearCurrentUser();
+      console.log('Step 3: AsyncStorage cleared successfully');
+      
+      // Step 3: Navigate to welcome screen
+      console.log('Step 4: Navigating to welcome screen');
+      
+      // Use setTimeout to ensure state updates are processed
+      setTimeout(() => {
+        try {
+          router.replace('/welcome');
+          console.log('Step 5: Navigation command executed');
+        } catch (navError) {
+          console.log('Navigation error:', navError);
+        }
+      }, 100);
+      
       console.log('=== LOGOUT COMPLETED ===');
     } catch (error) {
       console.log('Logout error:', error);
-      // Even if there's an error, set user to null to ensure logout
+      // Even if there's an error, set user to null and navigate
       setUser(null);
-      throw error;
+      setTimeout(() => {
+        try {
+          router.replace('/welcome');
+        } catch (navError) {
+          console.log('Fallback navigation error:', navError);
+        }
+      }, 100);
     }
   };
 

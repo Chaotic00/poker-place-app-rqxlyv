@@ -39,20 +39,13 @@ export default function ProfileScreen() {
               console.log('=== USER CONFIRMED LOGOUT ===');
               console.log('Calling logout function...');
               
-              // Call logout and wait for it to complete
+              // Call logout - it now handles navigation internally
               await logout();
               
-              console.log('Logout function completed');
-              console.log('Navigating to welcome screen...');
-              
-              // Navigate to welcome screen - use replace to prevent back navigation
-              router.replace('/welcome');
-              
-              console.log('Navigation command sent');
+              console.log('Logout process initiated');
             } catch (error) {
               console.log('Error during logout process:', error);
-              // Even if there's an error, try to navigate
-              router.replace('/welcome');
+              // Logout function has fallback navigation
             }
           },
         },
