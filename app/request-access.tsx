@@ -68,7 +68,7 @@ export default function RequestAccessScreen() {
         <View style={styles.header}>
           <TextLogo size="medium" color={colors.text} />
           <Text style={styles.headerTitle}>Request Access</Text>
-          <Text style={commonStyles.textSecondary}>Join our poker community</Text>
+          <Text style={commonStyles.textSecondary}>Join our poker club</Text>
         </View>
 
         <View style={styles.form}>
