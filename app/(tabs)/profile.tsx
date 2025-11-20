@@ -8,10 +8,16 @@ import { useRouter } from 'expo-router';
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { user, logout, refreshUser } = useAuth();
+  const { user, logout, refreshUser, changePassword } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [nickname, setNickname] = useState(user?.nickname || '');
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  
+  // Password change states
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isSubmittingPassword, setIsSubmittingPassword] = useState(false);
 
   const handleSaveNickname = async () => {
     if (!user) return;
@@ -24,6 +30,46 @@ export default function ProfileScreen() {
     await refreshUser();
     setIsEditing(false);
     Alert.alert('Success', 'Nickname updated successfully');
+  };
+
+  const handleChangePassword = async () => {
+    if (!newPassword || !confirmPassword) {
+      Alert.alert('Error', 'Please fill in both password fields');
+      return;
+    }
+
+    setIsSubmittingPassword(true);
+    try {
+      const result = await changePassword(newPassword, confirmPassword);
+      
+      if (result.success) {
+        Alert.alert(
+          'Password Changed',
+          'Your password has been changed successfully. You will now be logged out.',
+          [
+            {
+              text: 'OK',
+              onPress: () => {
+                console.log('User acknowledged password change');
+              }
+            }
+          ]
+        );
+      } else {
+        Alert.alert('Error', result.error || 'Failed to change password');
+        setIsSubmittingPassword(false);
+      }
+    } catch (error) {
+      console.log('Error changing password:', error);
+      Alert.alert('Error', 'An unexpected error occurred');
+      setIsSubmittingPassword(false);
+    }
+  };
+
+  const handleCancelPasswordChange = () => {
+    setIsChangingPassword(false);
+    setNewPassword('');
+    setConfirmPassword('');
   };
 
   const handleLogout = () => {
@@ -141,6 +187,73 @@ export default function ProfileScreen() {
           </View>
         </View>
 
+        <View style={commonStyles.card}>
+          <View style={styles.profileSection}>
+            <Text style={styles.sectionTitle}>Security</Text>
+            
+            {isChangingPassword ? (
+              <>
+                <Text style={styles.passwordDescription}>
+                  Enter your new password twice to confirm. You will be logged out after changing your password.
+                </Text>
+                
+                <Text style={styles.inputLabel}>New Password</Text>
+                <TextInput
+                  style={commonStyles.input}
+                  value={newPassword}
+                  onChangeText={setNewPassword}
+                  placeholder="Enter new password"
+                  placeholderTextColor={colors.textSecondary}
+                  secureTextEntry
+                  autoCapitalize="none"
+                />
+                
+                <Text style={styles.inputLabel}>Confirm New Password</Text>
+                <TextInput
+                  style={commonStyles.input}
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  placeholder="Confirm new password"
+                  placeholderTextColor={colors.textSecondary}
+                  secureTextEntry
+                  autoCapitalize="none"
+                />
+                
+                <View style={styles.editButtons}>
+                  <TouchableOpacity
+                    style={[buttonStyles.primary, styles.editButton, isSubmittingPassword && styles.buttonDisabled]}
+                    onPress={handleChangePassword}
+                    disabled={isSubmittingPassword}
+                  >
+                    <Text style={buttonStyles.text}>
+                      {isSubmittingPassword ? 'Changing...' : 'Change Password'}
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[buttonStyles.outline, styles.editButton]}
+                    onPress={handleCancelPasswordChange}
+                    disabled={isSubmittingPassword}
+                  >
+                    <Text style={buttonStyles.outlineText}>Cancel</Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            ) : (
+              <>
+                <Text style={styles.passwordDescription}>
+                  Change your account password. You will be logged out after changing your password.
+                </Text>
+                <TouchableOpacity
+                  style={[buttonStyles.outline, styles.changePasswordButton]}
+                  onPress={() => setIsChangingPassword(true)}
+                >
+                  <Text style={buttonStyles.outlineText}>🔒 Change Password</Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+        </View>
+
         {user.status === 'admin' && (
           <View style={commonStyles.card}>
             <View style={styles.profileSection}>
@@ -234,6 +347,19 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     lineHeight: 20,
   },
+  passwordDescription: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    marginBottom: 16,
+    lineHeight: 20,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 8,
+    marginTop: 8,
+  },
   infoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -278,9 +404,13 @@ const styles = StyleSheet.create({
   editNicknameButton: {
     marginTop: 8,
   },
+  changePasswordButton: {
+    marginTop: 8,
+  },
   editButtons: {
     flexDirection: 'row',
     gap: 12,
+    marginTop: 16,
   },
   editButton: {
     flex: 1,
@@ -292,6 +422,9 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   logoutButtonDisabled: {
+    opacity: 0.5,
+  },
+  buttonDisabled: {
     opacity: 0.5,
   },
 });

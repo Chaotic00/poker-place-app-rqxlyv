@@ -11,6 +11,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   register: (userData: Omit<User, 'id' | 'status'> & { password: string }) => Promise<{ success: boolean; error?: string }>;
   refreshUser: () => Promise<void>;
+  changePassword: (newPassword: string, confirmPassword: string) => Promise<{ success: boolean; error?: string }>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -168,8 +169,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const changePassword = async (newPassword: string, confirmPassword: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      console.log('=== PASSWORD CHANGE STARTED ===');
+      
+      if (!user) {
+        console.log('No user logged in');
+        return { success: false, error: 'No user logged in' };
+      }
+
+      // Validate passwords match
+      if (newPassword !== confirmPassword) {
+        console.log('Passwords do not match');
+        return { success: false, error: 'Passwords do not match' };
+      }
+
+      // Validate password length
+      if (newPassword.length < 6) {
+        console.log('Password too short');
+        return { success: false, error: 'Password must be at least 6 characters' };
+      }
+
+      // Update password in storage
+      console.log('Updating password for user:', user.email);
+      const users = await StorageService.getUsers();
+      const updatedUsers = users.map(u => 
+        u.id === user.id ? { ...u, password: newPassword } : u
+      );
+      await StorageService.saveUsers(updatedUsers);
+      console.log('Password updated successfully');
+
+      // Log out the user
+      console.log('Logging out user after password change');
+      await logout();
+
+      console.log('=== PASSWORD CHANGE COMPLETED ===');
+      return { success: true };
+    } catch (error) {
+      console.log('Password change error:', error);
+      return { success: false, error: 'An error occurred while changing password' };
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, register, refreshUser }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, register, refreshUser, changePassword }}>
       {children}
     </AuthContext.Provider>
   );
