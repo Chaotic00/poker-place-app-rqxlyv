@@ -35,3 +35,22 @@ export interface RSVP {
   tournament_id: string;
   timestamp: string;
 }
+
+export type CashGameType = 'holdem' | 'plo';
+
+export interface CashGame {
+  id: string;
+  game_type: CashGameType;
+  stakes: string;
+  tables_running: number;
+  seats_open: number;
+  total_seats: number;
+  updated_at: string;
+}
+
+export interface CashGameRSVP {
+  id: string;
+  user_id: string;
+  cash_game_id: string;
+  timestamp: string;
+}

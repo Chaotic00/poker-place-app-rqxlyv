@@ -1,11 +1,13 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { User, Tournament, RSVP } from '@/types';
+import { User, Tournament, RSVP, CashGame, CashGameRSVP } from '@/types';
 
 const USERS_KEY = '@poker_place_users';
 const TOURNAMENTS_KEY = '@poker_place_tournaments';
 const RSVPS_KEY = '@poker_place_rsvps';
 const CURRENT_USER_KEY = '@poker_place_current_user';
+const CASH_GAMES_KEY = '@poker_place_cash_games';
+const CASH_GAME_RSVPS_KEY = '@poker_place_cash_game_rsvps';
 
 export const StorageService = {
   async getUsers(): Promise<User[]> {
@@ -60,6 +62,44 @@ export const StorageService = {
       await AsyncStorage.setItem(RSVPS_KEY, JSON.stringify(rsvps));
     } catch (error) {
       console.log('Error saving RSVPs:', error);
+    }
+  },
+
+  async getCashGames(): Promise<CashGame[]> {
+    try {
+      const data = await AsyncStorage.getItem(CASH_GAMES_KEY);
+      return data ? JSON.parse(data) : [];
+    } catch (error) {
+      console.log('Error getting cash games:', error);
+      return [];
+    }
+  },
+
+  async saveCashGames(cashGames: CashGame[]): Promise<void> {
+    try {
+      await AsyncStorage.setItem(CASH_GAMES_KEY, JSON.stringify(cashGames));
+      console.log('Cash games saved:', cashGames.length);
+    } catch (error) {
+      console.log('Error saving cash games:', error);
+    }
+  },
+
+  async getCashGameRSVPs(): Promise<CashGameRSVP[]> {
+    try {
+      const data = await AsyncStorage.getItem(CASH_GAME_RSVPS_KEY);
+      return data ? JSON.parse(data) : [];
+    } catch (error) {
+      console.log('Error getting cash game RSVPs:', error);
+      return [];
+    }
+  },
+
+  async saveCashGameRSVPs(rsvps: CashGameRSVP[]): Promise<void> {
+    try {
+      await AsyncStorage.setItem(CASH_GAME_RSVPS_KEY, JSON.stringify(rsvps));
+      console.log('Cash game RSVPs saved:', rsvps.length);
+    } catch (error) {
+      console.log('Error saving cash game RSVPs:', error);
     }
   },
 
@@ -161,6 +201,32 @@ export const StorageService = {
       ];
       await this.saveTournaments(defaultTournaments);
       console.log('Default tournaments created');
+    }
+
+    const cashGames = await this.getCashGames();
+    if (cashGames.length === 0) {
+      const defaultCashGames: CashGame[] = [
+        {
+          id: 'holdem',
+          game_type: 'holdem',
+          stakes: '$1/$2',
+          tables_running: 2,
+          seats_open: 5,
+          total_seats: 18,
+          updated_at: new Date().toISOString(),
+        },
+        {
+          id: 'plo',
+          game_type: 'plo',
+          stakes: '$2/$5',
+          tables_running: 1,
+          seats_open: 3,
+          total_seats: 9,
+          updated_at: new Date().toISOString(),
+        },
+      ];
+      await this.saveCashGames(defaultCashGames);
+      console.log('Default cash games created');
     }
   },
 };

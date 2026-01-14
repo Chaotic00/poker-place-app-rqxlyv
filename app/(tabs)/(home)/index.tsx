@@ -3,15 +3,20 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
 import { colors, commonStyles } from '@/styles/commonStyles';
-import { Tournament, RSVP } from '@/types';
+import { Tournament, RSVP, CashGame, CashGameRSVP } from '@/types';
 import { StorageService } from '@/utils/storage';
 import { useAuth } from '@/contexts/AuthContext';
+
+type ViewMode = 'tournaments' | 'cashgames';
 
 export default function HomeScreen() {
   const router = useRouter();
   const { user } = useAuth();
+  const [viewMode, setViewMode] = useState<ViewMode>('tournaments');
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [rsvps, setRsvps] = useState<RSVP[]>([]);
+  const [cashGames, setCashGames] = useState<CashGame[]>([]);
+  const [cashGameRsvps, setCashGameRsvps] = useState<CashGameRSVP[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
@@ -19,8 +24,11 @@ export default function HomeScreen() {
   }, []);
 
   const loadData = async () => {
+    console.log('Loading home screen data');
     const tournamentsData = await StorageService.getTournaments();
     const rsvpsData = await StorageService.getRSVPs();
+    const cashGamesData = await StorageService.getCashGames();
+    const cashGameRsvpsData = await StorageService.getCashGameRSVPs();
     
     const sortedTournaments = tournamentsData.sort((a, b) => 
       new Date(a.date_time).getTime() - new Date(b.date_time).getTime()
@@ -28,6 +36,8 @@ export default function HomeScreen() {
     
     setTournaments(sortedTournaments);
     setRsvps(rsvpsData);
+    setCashGames(cashGamesData);
+    setCashGameRsvps(cashGameRsvpsData);
   };
 
   const onRefresh = async () => {
@@ -36,11 +46,12 @@ export default function HomeScreen() {
     setRefreshing(false);
   };
 
-  const handleRSVP = async (tournamentId: string, event: any) => {
-    // Stop event propagation to prevent navigation
+  const handleTournamentRSVP = async (tournamentId: string, event: any) => {
     event.stopPropagation();
     
     if (!user) return;
+
+    console.log('User toggling tournament RSVP:', tournamentId);
 
     const existingRSVP = rsvps.find(
       r => r.tournament_id === tournamentId && r.user_id === user.id
@@ -49,6 +60,7 @@ export default function HomeScreen() {
     let updatedRsvps: RSVP[];
     if (existingRSVP) {
       updatedRsvps = rsvps.filter(r => r.id !== existingRSVP.id);
+      console.log('Cancelled tournament RSVP');
     } else {
       const newRSVP: RSVP = {
         id: Date.now().toString(),
@@ -57,10 +69,41 @@ export default function HomeScreen() {
         timestamp: new Date().toISOString(),
       };
       updatedRsvps = [...rsvps, newRSVP];
+      console.log('Created tournament RSVP');
     }
 
     await StorageService.saveRSVPs(updatedRsvps);
     setRsvps(updatedRsvps);
+  };
+
+  const handleCashGameRSVP = async (cashGameId: string, event: any) => {
+    event.stopPropagation();
+    
+    if (!user) return;
+
+    console.log('User toggling cash game RSVP:', cashGameId);
+
+    const existingRSVP = cashGameRsvps.find(
+      r => r.cash_game_id === cashGameId && r.user_id === user.id
+    );
+
+    let updatedRsvps: CashGameRSVP[];
+    if (existingRSVP) {
+      updatedRsvps = cashGameRsvps.filter(r => r.id !== existingRSVP.id);
+      console.log('Cancelled cash game RSVP');
+    } else {
+      const newRSVP: CashGameRSVP = {
+        id: Date.now().toString(),
+        user_id: user.id,
+        cash_game_id: cashGameId,
+        timestamp: new Date().toISOString(),
+      };
+      updatedRsvps = [...cashGameRsvps, newRSVP];
+      console.log('Created cash game RSVP');
+    }
+
+    await StorageService.saveCashGameRSVPs(updatedRsvps);
+    setCashGameRsvps(updatedRsvps);
   };
 
   const handleTournamentPress = (tournamentId: string) => {
@@ -68,12 +111,20 @@ export default function HomeScreen() {
     router.push(`/tournament-details?id=${tournamentId}`);
   };
 
-  const isRSVPd = (tournamentId: string) => {
+  const isTournamentRSVPd = (tournamentId: string) => {
     return rsvps.some(r => r.tournament_id === tournamentId && r.user_id === user?.id);
   };
 
-  const getRSVPCount = (tournamentId: string) => {
+  const isCashGameRSVPd = (cashGameId: string) => {
+    return cashGameRsvps.some(r => r.cash_game_id === cashGameId && r.user_id === user?.id);
+  };
+
+  const getTournamentRSVPCount = (tournamentId: string) => {
     return rsvps.filter(r => r.tournament_id === tournamentId).length;
+  };
+
+  const getCashGameRSVPCount = (cashGameId: string) => {
+    return cashGameRsvps.filter(r => r.cash_game_id === cashGameId).length;
   };
 
   const formatDate = (dateString: string) => {
@@ -87,11 +138,53 @@ export default function HomeScreen() {
     });
   };
 
+  const getGameTypeName = (gameType: string) => {
+    return gameType === 'holdem' ? 'Hold\'em' : 'PLO';
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>♠️ The Poker Place</Text>
-        <Text style={styles.headerSubtitle}>Upcoming Tournaments</Text>
+        
+        <View style={styles.segmentedControl}>
+          <TouchableOpacity
+            style={[
+              styles.segmentButton,
+              styles.segmentButtonLeft,
+              viewMode === 'tournaments' && styles.segmentButtonActive,
+            ]}
+            onPress={() => {
+              console.log('Switching to tournaments view');
+              setViewMode('tournaments');
+            }}
+          >
+            <Text style={[
+              styles.segmentButtonText,
+              viewMode === 'tournaments' && styles.segmentButtonTextActive,
+            ]}>
+              Tournaments
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.segmentButton,
+              styles.segmentButtonRight,
+              viewMode === 'cashgames' && styles.segmentButtonActive,
+            ]}
+            onPress={() => {
+              console.log('Switching to cash games view');
+              setViewMode('cashgames');
+            }}
+          >
+            <Text style={[
+              styles.segmentButtonText,
+              viewMode === 'cashgames' && styles.segmentButtonTextActive,
+            ]}>
+              Cash Games
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView
@@ -101,76 +194,158 @@ export default function HomeScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
         }
       >
-        {tournaments.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyIcon}>🃏</Text>
-            <Text style={styles.emptyText}>No tournaments scheduled</Text>
-          </View>
-        ) : (
-          tournaments.map((tournament, index) => {
-            const rsvpCount = getRSVPCount(tournament.id);
-            const isUserRSVPd = isRSVPd(tournament.id);
-            const isFull = rsvpCount >= tournament.max_players;
+        {viewMode === 'tournaments' ? (
+          <>
+            {tournaments.length === 0 ? (
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyIcon}>🃏</Text>
+                <Text style={styles.emptyText}>No tournaments scheduled</Text>
+              </View>
+            ) : (
+              tournaments.map((tournament, index) => {
+                const rsvpCount = getTournamentRSVPCount(tournament.id);
+                const isUserRSVPd = isTournamentRSVPd(tournament.id);
+                const isFull = rsvpCount >= tournament.max_players;
 
-            return (
-              <React.Fragment key={index}>
-                <TouchableOpacity
-                  style={styles.card}
-                  onPress={() => handleTournamentPress(tournament.id)}
-                  activeOpacity={0.7}
-                >
-                  <View style={styles.tournamentHeader}>
-                    <Text style={styles.tournamentName}>{tournament.name}</Text>
-                    {isUserRSVPd && (
-                      <View style={styles.rsvpBadge}>
-                        <Text style={styles.rsvpBadgeText}>✓ RSVP&apos;d</Text>
-                      </View>
-                    )}
-                  </View>
-
-                  <View style={styles.tournamentInfo}>
-                    <View style={styles.infoRow}>
-                      <Text style={styles.infoIcon}>📅</Text>
-                      <Text style={styles.infoText}>{formatDate(tournament.date_time)}</Text>
-                    </View>
-                    <View style={styles.infoRow}>
-                      <Text style={styles.infoIcon}>💰</Text>
-                      <Text style={styles.infoText}>Buy-in: {tournament.buy_in}</Text>
-                    </View>
-                    <View style={styles.infoRow}>
-                      <Text style={styles.infoIcon}>👥</Text>
-                      <Text style={styles.infoText}>
-                        {rsvpCount} {rsvpCount === 1 ? 'player' : 'players'}
-                      </Text>
-                    </View>
-                  </View>
-
-                  {user?.status === 'approved' && (
+                return (
+                  <React.Fragment key={index}>
                     <TouchableOpacity
-                      style={[
-                        styles.rsvpButton,
-                        isUserRSVPd && styles.rsvpButtonActive,
-                        isFull && !isUserRSVPd && styles.rsvpButtonDisabled,
-                      ]}
-                      onPress={(e) => {
-                        if (!isFull || isUserRSVPd) {
-                          handleRSVP(tournament.id, e);
-                        }
-                      }}
-                      disabled={isFull && !isUserRSVPd}
+                      style={styles.card}
+                      onPress={() => handleTournamentPress(tournament.id)}
+                      activeOpacity={0.7}
                     >
-                      <Text style={[
-                        styles.rsvpButtonText,
-                        isUserRSVPd && styles.rsvpButtonTextActive,
-                      ]}>
-                        {isFull && !isUserRSVPd ? 'Full' : isUserRSVPd ? 'Cancel RSVP' : 'RSVP'}
-                      </Text>
+                      <View style={styles.tournamentHeader}>
+                        <Text style={styles.tournamentName}>{tournament.name}</Text>
+                        {isUserRSVPd && (
+                          <View style={styles.rsvpBadge}>
+                            <Text style={styles.rsvpBadgeText}>✓ RSVP&apos;d</Text>
+                          </View>
+                        )}
+                      </View>
+
+                      <View style={styles.tournamentInfo}>
+                        <View style={styles.infoRow}>
+                          <Text style={styles.infoIcon}>📅</Text>
+                          <Text style={styles.infoText}>{formatDate(tournament.date_time)}</Text>
+                        </View>
+                        <View style={styles.infoRow}>
+                          <Text style={styles.infoIcon}>💰</Text>
+                          <Text style={styles.infoText}>Buy-in: {tournament.buy_in}</Text>
+                        </View>
+                        <View style={styles.infoRow}>
+                          <Text style={styles.infoIcon}>👥</Text>
+                          <Text style={styles.infoText}>
+                            {rsvpCount} {rsvpCount === 1 ? 'player' : 'players'}
+                          </Text>
+                        </View>
+                      </View>
+
+                      {user?.status === 'approved' && (
+                        <TouchableOpacity
+                          style={[
+                            styles.rsvpButton,
+                            isUserRSVPd && styles.rsvpButtonActive,
+                            isFull && !isUserRSVPd && styles.rsvpButtonDisabled,
+                          ]}
+                          onPress={(e) => {
+                            if (!isFull || isUserRSVPd) {
+                              handleTournamentRSVP(tournament.id, e);
+                            }
+                          }}
+                          disabled={isFull && !isUserRSVPd}
+                        >
+                          <Text style={[
+                            styles.rsvpButtonText,
+                            isUserRSVPd && styles.rsvpButtonTextActive,
+                          ]}>
+                            {isFull && !isUserRSVPd ? 'Full' : isUserRSVPd ? 'Cancel RSVP' : 'RSVP'}
+                          </Text>
+                        </TouchableOpacity>
+                      )}
                     </TouchableOpacity>
-                  )}
-                </TouchableOpacity>
-              </React.Fragment>
-            );
-          })
+                  </React.Fragment>
+                );
+              })
+            )}
+          </>
+        ) : (
+          <>
+            {cashGames.length === 0 ? (
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyIcon}>💵</Text>
+                <Text style={styles.emptyText}>No cash games available</Text>
+              </View>
+            ) : (
+              cashGames.map((cashGame, index) => {
+                const rsvpCount = getCashGameRSVPCount(cashGame.id);
+                const isUserRSVPd = isCashGameRSVPd(cashGame.id);
+                const seatsAvailable = cashGame.seats_open > 0;
+
+                return (
+                  <React.Fragment key={index}>
+                    <View style={styles.card}>
+                      <View style={styles.tournamentHeader}>
+                        <Text style={styles.tournamentName}>{getGameTypeName(cashGame.game_type)}</Text>
+                        {isUserRSVPd && (
+                          <View style={styles.rsvpBadge}>
+                            <Text style={styles.rsvpBadgeText}>✓ RSVP&apos;d</Text>
+                          </View>
+                        )}
+                      </View>
+
+                      <View style={styles.tournamentInfo}>
+                        <View style={styles.infoRow}>
+                          <Text style={styles.infoIcon}>💰</Text>
+                          <Text style={styles.infoText}>Stakes: {cashGame.stakes}</Text>
+                        </View>
+                        <View style={styles.infoRow}>
+                          <Text style={styles.infoIcon}>🎲</Text>
+                          <Text style={styles.infoText}>
+                            Tables Running: {cashGame.tables_running}
+                          </Text>
+                        </View>
+                        <View style={styles.infoRow}>
+                          <Text style={styles.infoIcon}>💺</Text>
+                          <Text style={styles.infoText}>
+                            Seats Open: {cashGame.seats_open} / {cashGame.total_seats}
+                          </Text>
+                        </View>
+                        <View style={styles.infoRow}>
+                          <Text style={styles.infoIcon}>👥</Text>
+                          <Text style={styles.infoText}>
+                            {rsvpCount} {rsvpCount === 1 ? 'RSVP' : 'RSVPs'}
+                          </Text>
+                        </View>
+                      </View>
+
+                      {user?.status === 'approved' && (
+                        <TouchableOpacity
+                          style={[
+                            styles.rsvpButton,
+                            isUserRSVPd && styles.rsvpButtonActive,
+                            !seatsAvailable && !isUserRSVPd && styles.rsvpButtonDisabled,
+                          ]}
+                          onPress={(e) => {
+                            if (seatsAvailable || isUserRSVPd) {
+                              handleCashGameRSVP(cashGame.id, e);
+                            }
+                          }}
+                          disabled={!seatsAvailable && !isUserRSVPd}
+                        >
+                          <Text style={[
+                            styles.rsvpButtonText,
+                            isUserRSVPd && styles.rsvpButtonTextActive,
+                          ]}>
+                            {!seatsAvailable && !isUserRSVPd ? 'Full' : isUserRSVPd ? 'Cancel RSVP' : 'RSVP for Seat'}
+                          </Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  </React.Fragment>
+                );
+              })
+            )}
+          </>
         )}
       </ScrollView>
     </View>
@@ -194,11 +369,39 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '800',
     color: colors.text,
-    marginBottom: 4,
+    marginBottom: 16,
+    textAlign: 'center',
   },
-  headerSubtitle: {
-    fontSize: 16,
+  segmentedControl: {
+    flexDirection: 'row',
+    backgroundColor: colors.background,
+    borderRadius: 10,
+    padding: 4,
+  },
+  segmentButton: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  segmentButtonLeft: {
+    borderTopLeftRadius: 8,
+    borderBottomLeftRadius: 8,
+  },
+  segmentButtonRight: {
+    borderTopRightRadius: 8,
+    borderBottomRightRadius: 8,
+  },
+  segmentButtonActive: {
+    backgroundColor: colors.primary,
+  },
+  segmentButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
     color: colors.textSecondary,
+  },
+  segmentButtonTextActive: {
+    color: colors.card,
   },
   scrollView: {
     flex: 1,

@@ -21,6 +21,12 @@ export default function AdminScreen() {
       route: '/admin/tournament-management',
     },
     {
+      title: 'Cash Game Management',
+      description: 'Manage stakes, tables running, and seats open',
+      icon: '💵',
+      route: '/admin/cash-game-management',
+    },
+    {
       title: 'RSVP Viewer',
       description: 'View RSVPs for all tournaments',
       icon: '📋',
@@ -33,16 +39,18 @@ export default function AdminScreen() {
       <View style={styles.header}>
         <Text style={styles.headerIcon}>⚙️</Text>
         <Text style={styles.headerTitle}>Admin Panel</Text>
-        <Text style={styles.headerSubtitle}>Manage users and tournaments</Text>
+        <Text style={styles.headerSubtitle}>Manage users, tournaments, and cash games</Text>
       </View>
 
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
         {adminActions.map((action, index) => (
           <React.Fragment key={index}>
             <TouchableOpacity
-              key={index}
               style={commonStyles.card}
-              onPress={() => router.push(action.route as any)}
+              onPress={() => {
+                console.log('Admin navigating to:', action.route);
+                router.push(action.route as any);
+              }}
               activeOpacity={0.7}
             >
               <View style={styles.actionCard}>
@@ -88,6 +96,7 @@ const styles = StyleSheet.create({
   headerSubtitle: {
     fontSize: 16,
     color: colors.textSecondary,
+    textAlign: 'center',
   },
   scrollView: {
     flex: 1,
