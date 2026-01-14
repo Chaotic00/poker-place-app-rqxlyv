@@ -27,10 +27,16 @@ export default function AdminScreen() {
       route: '/admin/cash-game-management',
     },
     {
-      title: 'RSVP Viewer',
+      title: 'Tournament RSVP Viewer',
       description: 'View RSVPs for all tournaments',
       icon: '📋',
       route: '/admin/rsvp-viewer',
+    },
+    {
+      title: 'Cash Game RSVP Viewer',
+      description: 'View and manage cash game RSVPs',
+      icon: '💰',
+      route: '/admin/cash-game-rsvp-viewer',
     },
   ];
 
