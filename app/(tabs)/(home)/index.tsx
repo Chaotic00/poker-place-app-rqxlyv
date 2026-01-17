@@ -81,7 +81,7 @@ export default function HomeScreen() {
     
     if (!user) return;
 
-    console.log('User toggling cash game RSVP:', cashGameId);
+    console.log('User toggling cash game waitlist:', cashGameId);
 
     const existingRSVP = cashGameRsvps.find(
       r => r.cash_game_id === cashGameId && r.user_id === user.id
@@ -90,7 +90,7 @@ export default function HomeScreen() {
     let updatedRsvps: CashGameRSVP[];
     if (existingRSVP) {
       updatedRsvps = cashGameRsvps.filter(r => r.id !== existingRSVP.id);
-      console.log('Cancelled cash game RSVP');
+      console.log('Removed from cash game waitlist');
     } else {
       const newRSVP: CashGameRSVP = {
         id: Date.now().toString(),
@@ -99,7 +99,7 @@ export default function HomeScreen() {
         timestamp: new Date().toISOString(),
       };
       updatedRsvps = [...cashGameRsvps, newRSVP];
-      console.log('Created cash game RSVP');
+      console.log('Added to cash game waitlist');
     }
 
     await StorageService.saveCashGameRSVPs(updatedRsvps);
@@ -277,8 +277,8 @@ export default function HomeScreen() {
               </View>
             ) : (
               cashGames.map((cashGame, index) => {
-                const rsvpCount = getCashGameRSVPCount(cashGame.id);
-                const isUserRSVPd = isCashGameRSVPd(cashGame.id);
+                const waitlistCount = getCashGameRSVPCount(cashGame.id);
+                const isUserWaitlisted = isCashGameRSVPd(cashGame.id);
                 const seatsAvailable = cashGame.seats_open > 0;
 
                 return (
@@ -286,9 +286,9 @@ export default function HomeScreen() {
                     <View style={styles.card}>
                       <View style={styles.tournamentHeader}>
                         <Text style={styles.tournamentName}>{getGameTypeName(cashGame.game_type)}</Text>
-                        {isUserRSVPd && (
+                        {isUserWaitlisted && (
                           <View style={styles.rsvpBadge}>
-                            <Text style={styles.rsvpBadgeText}>✓ RSVP&apos;d</Text>
+                            <Text style={styles.rsvpBadgeText}>✓ Waitlisted</Text>
                           </View>
                         )}
                       </View>
@@ -313,7 +313,7 @@ export default function HomeScreen() {
                         <View style={styles.infoRow}>
                           <Text style={styles.infoIcon}>👥</Text>
                           <Text style={styles.infoText}>
-                            {rsvpCount} {rsvpCount === 1 ? 'RSVP' : 'RSVPs'}
+                            Waitlist: {waitlistCount} {waitlistCount === 1 ? 'player' : 'players'}
                           </Text>
                         </View>
                       </View>
@@ -322,21 +322,17 @@ export default function HomeScreen() {
                         <TouchableOpacity
                           style={[
                             styles.rsvpButton,
-                            isUserRSVPd && styles.rsvpButtonActive,
-                            !seatsAvailable && !isUserRSVPd && styles.rsvpButtonDisabled,
+                            isUserWaitlisted && styles.rsvpButtonActive,
                           ]}
                           onPress={(e) => {
-                            if (seatsAvailable || isUserRSVPd) {
-                              handleCashGameRSVP(cashGame.id, e);
-                            }
+                            handleCashGameRSVP(cashGame.id, e);
                           }}
-                          disabled={!seatsAvailable && !isUserRSVPd}
                         >
                           <Text style={[
                             styles.rsvpButtonText,
-                            isUserRSVPd && styles.rsvpButtonTextActive,
+                            isUserWaitlisted && styles.rsvpButtonTextActive,
                           ]}>
-                            {!seatsAvailable && !isUserRSVPd ? 'Full' : isUserRSVPd ? 'Cancel RSVP' : 'RSVP for Seat'}
+                            {isUserWaitlisted ? 'Remove from Waitlist' : 'Join Waitlist'}
                           </Text>
                         </TouchableOpacity>
                       )}

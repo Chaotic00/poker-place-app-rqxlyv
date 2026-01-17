@@ -26,7 +26,7 @@ export default function CashGameRSVPViewerScreen() {
   }, [selectedCashGameId]);
 
   const loadData = async () => {
-    console.log('Loading cash games and users for RSVP management');
+    console.log('Loading cash games and users for waitlist management');
     const cashGamesData = await StorageService.getCashGames();
     setCashGames(cashGamesData);
     if (cashGamesData.length > 0) {
@@ -38,7 +38,7 @@ export default function CashGameRSVPViewerScreen() {
   };
 
   const loadRSVPs = async () => {
-    console.log('Loading RSVPs for cash game:', selectedCashGameId);
+    console.log('Loading waitlist for cash game:', selectedCashGameId);
     const allRsvps = await StorageService.getCashGameRSVPs();
     const cashGameRsvps = allRsvps.filter(r => r.cash_game_id === selectedCashGameId);
     setRsvps(cashGameRsvps);
@@ -49,11 +49,11 @@ export default function CashGameRSVPViewerScreen() {
   };
 
   const handleUnRSVP = async (userId: string, userName: string) => {
-    console.log('Admin un-RSVPing user:', userName, 'from cash game:', selectedCashGameId);
+    console.log('Admin removing user from waitlist:', userName, 'from cash game:', selectedCashGameId);
     
     Alert.alert(
-      'Confirm Un-RSVP',
-      `Are you sure you want to remove ${userName} from this cash game?`,
+      'Remove from Waitlist',
+      `Are you sure you want to remove ${userName} from the waitlist?`,
       [
         {
           text: 'Cancel',
@@ -69,22 +69,8 @@ export default function CashGameRSVPViewerScreen() {
             );
             await StorageService.saveCashGameRSVPs(updatedRsvps);
             
-            // Update seats open count
-            const cashGamesData = await StorageService.getCashGames();
-            const updatedCashGames = cashGamesData.map(cg => {
-              if (cg.id === selectedCashGameId) {
-                return {
-                  ...cg,
-                  seats_open: Math.min(cg.seats_open + 1, cg.total_seats),
-                  updated_at: new Date().toISOString(),
-                };
-              }
-              return cg;
-            });
-            await StorageService.saveCashGames(updatedCashGames);
-            
-            console.log('User un-RSVPd successfully, seats open updated');
-            Alert.alert('Success', `${userName} has been removed from the cash game`);
+            console.log('User removed from waitlist successfully');
+            Alert.alert('Success', `${userName} has been removed from the waitlist`);
             loadRSVPs();
           },
         },
@@ -102,8 +88,8 @@ export default function CashGameRSVPViewerScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerIcon}>💵</Text>
-        <Text style={styles.headerTitle}>Cash Game RSVP Management</Text>
-        <Text style={styles.headerSubtitle}>View and manage player RSVPs</Text>
+        <Text style={styles.headerTitle}>Cash Game Waitlist</Text>
+        <Text style={styles.headerSubtitle}>View and manage player waitlist</Text>
       </View>
 
       <View style={styles.pickerContainer}>
@@ -141,7 +127,7 @@ export default function CashGameRSVPViewerScreen() {
             <Text style={styles.infoValue}>{selectedCashGame.seats_open}</Text>
           </View>
           <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Total RSVPs:</Text>
+            <Text style={styles.infoLabel}>Waitlist Count:</Text>
             <Text style={styles.infoValue}>{rsvpUsers.length}</Text>
           </View>
         </View>
@@ -150,7 +136,7 @@ export default function CashGameRSVPViewerScreen() {
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
         {rsvpUsers.length === 0 ? (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyText}>No RSVPs for this cash game</Text>
+            <Text style={styles.emptyText}>No players on waitlist</Text>
           </View>
         ) : (
           rsvpUsers.map((user, index) => (
