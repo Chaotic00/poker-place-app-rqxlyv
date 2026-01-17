@@ -16,6 +16,7 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
+    console.log('User attempting login with email:', email);
     setError('');
     
     if (!email || !password) {
@@ -28,8 +29,10 @@ export default function LoginScreen() {
     setLoading(false);
 
     if (result.success) {
+      console.log('Login successful, navigating to home');
       router.replace('/(tabs)/(home)');
     } else {
+      console.log('Login failed:', result.error);
       setError(result.error || 'Login failed');
     }
   };
@@ -102,18 +105,6 @@ export default function LoginScreen() {
             >
               <Text style={styles.linkText}>Forgot password?</Text>
             </TouchableOpacity>
-          </View>
-
-          <View style={styles.demoInfo}>
-            <Text style={styles.demoTitle}>Demo Credentials:</Text>
-            <View style={styles.demoRow}>
-              <Text style={styles.demoLabel}>Admin:</Text>
-              <Text style={styles.demoText}>admin@pokerplace.com / admin123</Text>
-            </View>
-            <View style={styles.demoRow}>
-              <Text style={styles.demoLabel}>User:</Text>
-              <Text style={styles.demoText}>john@example.com / password123</Text>
-            </View>
           </View>
 
           <TouchableOpacity
@@ -211,34 +202,6 @@ const styles = StyleSheet.create({
     color: colors.darkSilver,
     fontSize: 15,
     fontWeight: '600',
-  },
-  demoInfo: {
-    marginTop: 40,
-    padding: 20,
-    backgroundColor: colors.highlight,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  demoTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: 12,
-  },
-  demoRow: {
-    marginBottom: 8,
-  },
-  demoLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 2,
-  },
-  demoText: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
   },
   backButton: {
     marginTop: 24,

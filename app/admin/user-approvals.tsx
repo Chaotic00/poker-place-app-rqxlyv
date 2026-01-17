@@ -3,24 +3,28 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
-import { User } from '@/types';
+import { User, UserStatus } from '@/types';
 import { StorageService } from '@/utils/storage';
+import { Picker } from '@react-native-picker/picker';
 
 export default function UserApprovalsScreen() {
   const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
-  const [filter, setFilter] = useState<'pending' | 'approved' | 'rejected'>('pending');
+  const [filter, setFilter] = useState<'pending' | 'approved' | 'rejected' | 'admin'>('pending');
 
   useEffect(() => {
+    console.log('User Approvals screen loaded');
     loadUsers();
   }, []);
 
   const loadUsers = async () => {
     const allUsers = await StorageService.getUsers();
+    console.log('Loaded users:', allUsers.length);
     setUsers(allUsers);
   };
 
   const handleApprove = async (userId: string) => {
+    console.log('Admin approving user:', userId);
     Alert.alert(
       'Approve User',
       'Are you sure you want to approve this user?',
@@ -34,6 +38,7 @@ export default function UserApprovalsScreen() {
             );
             await StorageService.saveUsers(updatedUsers);
             setUsers(updatedUsers);
+            console.log('User approved successfully');
           },
         },
       ]
@@ -41,6 +46,7 @@ export default function UserApprovalsScreen() {
   };
 
   const handleReject = async (userId: string) => {
+    console.log('Admin rejecting user:', userId);
     Alert.alert(
       'Reject User',
       'Are you sure you want to reject this user?',
@@ -55,13 +61,69 @@ export default function UserApprovalsScreen() {
             );
             await StorageService.saveUsers(updatedUsers);
             setUsers(updatedUsers);
+            console.log('User rejected successfully');
           },
         },
       ]
     );
   };
 
-  const filteredUsers = users.filter(u => u.status === filter && u.status !== 'admin');
+  const handleChangeStatus = async (userId: string, currentStatus: UserStatus) => {
+    const user = users.find(u => u.id === userId);
+    if (!user) {
+      console.log('User not found:', userId);
+      return;
+    }
+
+    console.log('Admin changing user status for:', user.email, 'current status:', currentStatus);
+
+    Alert.alert(
+      'Change User Access Level',
+      `Change access level for ${user.full_name}?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Make Admin',
+          onPress: async () => {
+            console.log('Changing user to admin:', user.email);
+            const updatedUsers = users.map(u =>
+              u.id === userId ? { ...u, status: 'admin' as const } : u
+            );
+            await StorageService.saveUsers(updatedUsers);
+            setUsers(updatedUsers);
+            Alert.alert('Success', `${user.full_name} is now an admin.`);
+          },
+        },
+        {
+          text: 'Make Regular User',
+          onPress: async () => {
+            console.log('Changing user to approved:', user.email);
+            const updatedUsers = users.map(u =>
+              u.id === userId ? { ...u, status: 'approved' as const } : u
+            );
+            await StorageService.saveUsers(updatedUsers);
+            setUsers(updatedUsers);
+            Alert.alert('Success', `${user.full_name} is now a regular user.`);
+          },
+        },
+        {
+          text: 'Reject Access',
+          style: 'destructive',
+          onPress: async () => {
+            console.log('Changing user to rejected:', user.email);
+            const updatedUsers = users.map(u =>
+              u.id === userId ? { ...u, status: 'rejected' as const } : u
+            );
+            await StorageService.saveUsers(updatedUsers);
+            setUsers(updatedUsers);
+            Alert.alert('Success', `${user.full_name}'s access has been rejected.`);
+          },
+        },
+      ]
+    );
+  };
+
+  const filteredUsers = users.filter(u => u.status === filter);
 
   return (
     <View style={styles.container}>
@@ -90,6 +152,14 @@ export default function UserApprovalsScreen() {
             Rejected
           </Text>
         </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.filterButton, filter === 'admin' && styles.filterButtonActive]}
+          onPress={() => setFilter('admin')}
+        >
+          <Text style={[styles.filterButtonText, filter === 'admin' && styles.filterButtonTextActive]}>
+            Admins
+          </Text>
+        </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
@@ -100,7 +170,7 @@ export default function UserApprovalsScreen() {
         ) : (
           filteredUsers.map((user, index) => (
             <React.Fragment key={index}>
-              <View key={user.id} style={commonStyles.card}>
+              <View style={commonStyles.card}>
                 <View style={styles.userHeader}>
                   <Text style={styles.userName}>{user.full_name}</Text>
                   <View style={[
@@ -108,6 +178,7 @@ export default function UserApprovalsScreen() {
                     user.status === 'pending' && styles.statusBadgePending,
                     user.status === 'approved' && styles.statusBadgeApproved,
                     user.status === 'rejected' && styles.statusBadgeRejected,
+                    user.status === 'admin' && styles.statusBadgeAdmin,
                   ]}>
                     <Text style={styles.statusBadgeText}>
                       {user.status.charAt(0).toUpperCase() + user.status.slice(1)}
@@ -152,6 +223,13 @@ export default function UserApprovalsScreen() {
                     </TouchableOpacity>
                   </View>
                 )}
+
+                <TouchableOpacity
+                  style={[buttonStyles.outline, styles.changeAccessButton]}
+                  onPress={() => handleChangeStatus(user.id, user.status)}
+                >
+                  <Text style={buttonStyles.outlineText}>Change Access Level</Text>
+                </TouchableOpacity>
               </View>
             </React.Fragment>
           ))
@@ -183,7 +261,7 @@ const styles = StyleSheet.create({
   filterButton: {
     flex: 1,
     paddingVertical: 10,
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
     borderRadius: 8,
     backgroundColor: colors.card,
     borderWidth: 1,
@@ -195,7 +273,7 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
   },
   filterButtonText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
     color: colors.text,
   },
@@ -244,6 +322,9 @@ const styles = StyleSheet.create({
   statusBadgeRejected: {
     backgroundColor: colors.error,
   },
+  statusBadgeAdmin: {
+    backgroundColor: colors.primary,
+  },
   statusBadgeText: {
     color: colors.card,
     fontSize: 12,
@@ -270,9 +351,14 @@ const styles = StyleSheet.create({
   actionButtons: {
     flexDirection: 'row',
     gap: 12,
+    marginBottom: 12,
   },
   actionButton: {
     flex: 1,
+  },
+  changeAccessButton: {
+    width: '100%',
+    marginTop: 4,
   },
   footer: {
     padding: 16,
